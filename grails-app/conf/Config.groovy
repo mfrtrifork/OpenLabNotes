@@ -1,5 +1,5 @@
 // configuration for plugin testing - will not be included in the plugin zip
-grails.resources.adhoc.excludes = ['/js/tiny_mce/**/*.*']
+//grails.resources.adhoc.excludes = ['/js/tiny_mce/**/*.*']
 
 log4j = {
     // Example of changing the log pattern for the default console
