@@ -19,6 +19,7 @@ class NoteItem{
 		status inList:["open", "final"]
     }
 	static mapping = {
+		note type: 'text'
 		//table 'olfNoteItem'
 	}
 }

@@ -20,6 +20,7 @@ class NoteItemController {
     }
 
     def save() {
+		println params
         def noteItemInstance = new NoteItem(params)
         if (!noteItemInstance.save(flush: true, failOnError:true)) {
             render(view: "create", model: [noteItemInstance: noteItemInstance])

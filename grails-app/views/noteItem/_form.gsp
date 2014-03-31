@@ -54,7 +54,7 @@
 				</div>
 			</td>
 			<td>
-				<g:textArea name="note" value="${noteItemInstance?.note}" />
+				<textarea name="note">${noteItemInstance?.note}</textarea>
 			</td>
 		</tr>
 	</tbody>
