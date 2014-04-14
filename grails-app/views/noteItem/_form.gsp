@@ -21,15 +21,15 @@
 <%--	</label>--%>
 <%--	<g:textField name="status" value="${noteItemInstance?.status}" />--%>
 <%--</div>--%>
-<!--
-<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'timeSpent', 'error')} ">
-	<label for="timeSpent">
-		<g:message code="noteItem.timeSpent.label" default="Time Spent" />
-		
-	</label>
-	<g:field type="number" name="timeSpent" value="${noteItemInstance.timeSpent}" />
-</div>
--->
+
+<%--<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'timeSpent', 'error')} ">--%>
+<%--	<label for="timeSpent">--%>
+<%--		<g:message code="noteItem.timeSpent.label" default="Time Spent" />--%>
+<%--		--%>
+<%--	</label>--%>
+<%--	<g:field type="number" name="timeSpent" value="${noteItemInstance.timeSpent}" />--%>
+<%--</div>--%>
+
 <table>
 	<tbody>
 		<tr>

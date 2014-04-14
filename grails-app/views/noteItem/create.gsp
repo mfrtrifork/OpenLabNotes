@@ -5,7 +5,7 @@
 		<meta name="layout" content="${params.bodyOnly?'body':'main'}" />
 		<g:set var="entityName" value="${message(code: 'noteItem.label', default: 'NoteItem')}" />
 		<title><g:message code="default.create.label" args="[entityName]" /></title>
-		<r:require module="tinymce"/>
+<%--		<r:require module="tinymce"/>--%>
 	</head>
 	<body>
 		<div id="create-noteItem" class="content scaffold-create" role="main">

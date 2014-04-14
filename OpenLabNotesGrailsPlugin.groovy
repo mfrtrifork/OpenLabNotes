@@ -10,8 +10,8 @@ class OpenLabNotesGrailsPlugin {
 
     // TODO Fill in these fields
     def title = "Open Lab Notes Plugin" // Headline display name of the plugin
-    def author = "Your name"
-    def authorEmail = ""
+    def author = "Mihcael Franz"
+    def authorEmail = "mf@bfdata.dk"
     def description = '''\
 Brief summary/description of the plugin.
 '''

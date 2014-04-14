@@ -1,10 +1,15 @@
 package org.openlab.notes
 
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
+
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 
 class NoteItemController {
 
-    static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
+    static allowedMethods = [save: "POST", update: "POST", delete: "POST", finalize: "POST"]
 
     def index() {
         redirect(action: "list", params: params)
@@ -50,7 +55,6 @@ class NoteItemController {
             redirect(action: "list")
             return
         }
-
         [noteItemInstance: noteItemInstance]
     }
 
@@ -80,7 +84,7 @@ class NoteItemController {
         }
 
         flash.message = message(code: 'default.updated.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), noteItemInstance.id])
-        redirect(action: "show", id: noteItemInstance.id)
+        redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
     }
 
     def delete(Long id) {
@@ -92,7 +96,7 @@ class NoteItemController {
         }
 
         try {
-            noteItemInstance.delete(flush: true)
+            noteItemInstance.delete(flush: true, failOnError:true)
             flash.message = message(code: 'default.deleted.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
             redirect(action: "list", params:[bodyOnly: true]) // , params:[bodyOnly: true]
         }
@@ -101,4 +105,42 @@ class NoteItemController {
             redirect(action: "show", id: id)
         }
     }
+	def finalizeNote() {
+		def noteItemInstance = NoteItem.get(params.id)
+		if (!noteItemInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
+			redirect(action: "list")
+			return
+		}
+		params.status = 'final';
+		noteItemInstance.properties = params
+		
+		/* Remove attributes which shouldn't be hashed */
+		params.remove('status')
+		params.remove('version')
+		params.remove('controller')
+		params.remove('lang')
+		params.remove('action')
+		/* Set username in string to be hashed */
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		params.username = auth.name;
+		String hash = params.toString()
+		
+		println("finalizedNote before:" + noteItemInstance.finalizedNote)
+		println("params before:" + hash)
+		
+		noteItemInstance.setFinalizedNote(sha256(hash))
+		
+		println("finalizedNote after:" + noteItemInstance.finalizedNote)
+
+	}
+	static String sha256(String input) throws NoSuchAlgorithmException {
+		MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
+		byte[] result = mDigest.digest(input.getBytes());
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < result.length; i++) {
+			sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
+		}
+		return sb.toString();
+	}
 }

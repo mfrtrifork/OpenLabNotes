@@ -1,13 +1,15 @@
 package org.openlab.notes
 
-import org.openlab.main.DataObject
 
 class NoteItem{
+//	static belongsTo = [owner : User]
 	String title
 	String status
 	String note
+	String finalizedNote
 	Date dateCreated
 	long timeSpent = 0L
+	
 	
 	String toString(){
 		title
@@ -16,7 +18,8 @@ class NoteItem{
     static constraints = {
 		title blank: false
 		note blank: false
-		status inList:["open", "final"]
+		finalizedNote nullable: true
+		status inList:["open", "final", "signed"]
     }
 	static mapping = {
 		note type: 'text'
