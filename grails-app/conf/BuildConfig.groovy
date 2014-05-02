@@ -1,4 +1,5 @@
-grails.plugin.location.backend = "../OpenLabFramework/OpenLabBackend"
+/* REMOVED NOW DUE TO DYNAMIC PLUGIN LOAD */
+//grails.plugin.location.backend = "../OpenLabFramework/OpenLabBackend"
 
 grails.project.class.dir = "target/classes"
 grails.project.test.class.dir = "target/test-classes"

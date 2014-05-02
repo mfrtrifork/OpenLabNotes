@@ -116,7 +116,7 @@ class NoteItemController {
 		noteItemInstance.properties = params
 		
 		/* Remove attributes which shouldn't be hashed */
-		params.remove('status')
+		params.remove('status')	
 		params.remove('version')
 		params.remove('controller')
 		params.remove('lang')
@@ -125,6 +125,8 @@ class NoteItemController {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		params.username = auth.name;
 		String hash = params.toString()
+		
+		// STORE PASSWORD IN STRING
 		
 		println("finalizedNote before:" + noteItemInstance.finalizedNote)
 		println("params before:" + hash)

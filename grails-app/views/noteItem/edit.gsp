@@ -11,8 +11,8 @@
 		<g:javascript src="js/tinymce/plugins/table/plugin.min.js" />
 		<g:javascript src="js/tinymce/plugins/textcolor/plugin.min.js" />
 		<g:javascript src="js/tinymce/plugins/code/plugin.min.js" />
-<%--		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'skin.min.css')}" type="text/css">--%>
-<%--		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'content.min.css')}" type="text/css">--%>
+		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'skin.min.css')}" type="text/css">
+		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'content.min.css')}" type="text/css">
 		<script>
 			alert('test')
 		</script>

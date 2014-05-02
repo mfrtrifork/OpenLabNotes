@@ -1,8 +1,9 @@
 package org.openlab.notes
 
+import org.openlab.main.DataObject;
 
-class NoteItem{
-//	static belongsTo = [owner : User]
+
+class NoteItem extends DataObject{
 	String title
 	String status
 	String note
