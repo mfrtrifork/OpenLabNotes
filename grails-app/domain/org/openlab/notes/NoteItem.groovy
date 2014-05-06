@@ -1,9 +1,6 @@
 package org.openlab.notes
 
-import org.openlab.main.DataObject;
-
-
-class NoteItem extends DataObject{
+class NoteItem{
 	String title
 	String status
 	String note
