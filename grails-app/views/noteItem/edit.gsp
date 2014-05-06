@@ -6,13 +6,13 @@
 		<g:set var="entityName" value="${message(code: 'noteItem.label', default: 'NoteItem')}" />
 		<title><g:message code="default.edit.label" args="[entityName]" /></title>
 		
-		<g:javascript src="js/tinymce/tinymce.min.js" />
-		<g:javascript src="js/tinymce/themes/modern/theme.min.js" />
-		<g:javascript src="js/tinymce/plugins/table/plugin.min.js" />
-		<g:javascript src="js/tinymce/plugins/textcolor/plugin.min.js" />
-		<g:javascript src="js/tinymce/plugins/code/plugin.min.js" />
-		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'skin.min.css')}" type="text/css">
-		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'content.min.css')}" type="text/css">
+<%--		<g:javascript src="js/tinymce/tinymce.min.js" />--%>
+<%--		<g:javascript src="js/tinymce/themes/modern/theme.min.js" />--%>
+<%--		<g:javascript src="js/tinymce/plugins/table/plugin.min.js" />--%>
+<%--		<g:javascript src="js/tinymce/plugins/textcolor/plugin.min.js" />--%>
+<%--		<g:javascript src="js/tinymce/plugins/code/plugin.min.js" />--%>
+<%--		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'skin.min.css')}" type="text/css">--%>
+<%--		<link rel="stylesheet" href="${resource(dir: 'js/tinymce/skins/lightgray', file: 'content.min.css')}" type="text/css">--%>
 		<script>
 			alert('test')
 		</script>
@@ -39,7 +39,6 @@
 			</ul>
 			</g:hasErrors>
 			<g:form method="post" >
-			ETEST
 				<g:hiddenField name="id" value="${noteItemInstance?.id}" />
 				<g:hiddenField name="version" value="${noteItemInstance?.version}" />
 				<fieldset class="form">
