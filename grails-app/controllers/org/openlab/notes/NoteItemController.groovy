@@ -16,7 +16,9 @@ class NoteItemController {
     }
 
     def list(Integer max) {
-        params.max = Math.min(max ?: 10, 100)
+        params.max = Math.min(max ?: 15, 100)
+		params.sort = "dateCreated"
+		params.order = "desc"
         [noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count()]
     }
 

@@ -35,7 +35,7 @@
 				</g:eachError>
 			</ul>
 			</g:hasErrors>
-			<g:form method="post" >
+			<g:form method="post" onsubmit="return false;">
 				<g:hiddenField name="id" value="${noteItemInstance?.id}" />
 				<g:hiddenField name="version" value="${noteItemInstance?.version}" />
 				<fieldset class="form">

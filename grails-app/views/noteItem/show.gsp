@@ -67,14 +67,14 @@
 					
 				</li>
 				</g:if>
+<%--				This should be removed when deloyed--%>
 				<g:if test="${noteItemInstance?.finalizedNote}">
 				<li class="fieldcontain">
 					<span id="hash-label" class="property-label"><g:message code="noteItem.hash.label" default="Hash" /></span>
-					
 						<span class="property-value" aria-labelledby="title-label"><g:fieldValue bean="${noteItemInstance}" field="finalizedNote"/></span>
-					
 				</li>
 				</g:if>
+<%--				To here--%>
 			</ol>
 			<g:form>
 				<fieldset class="buttons">
