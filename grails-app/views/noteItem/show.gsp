@@ -67,15 +67,29 @@
 					
 				</li>
 				</g:if>
-			
+				<g:if test="${noteItemInstance?.finalizedNote}">
+				<li class="fieldcontain">
+					<span id="hash-label" class="property-label"><g:message code="noteItem.hash.label" default="Hash" /></span>
+					
+						<span class="property-value" aria-labelledby="title-label"><g:fieldValue bean="${noteItemInstance}" field="finalizedNote"/></span>
+					
+				</li>
+				</g:if>
 			</ol>
 			<g:form>
 				<fieldset class="buttons">
 					<g:hiddenField name="id" value="${noteItemInstance?.id}" />
-					<g:remoteLink params="${[bodyOnly: true]}" update="body" class="edit" action="edit" id="${noteItemInstance.id}"><g:message code="default.button.edit.label" default="Edit" /></g:remoteLink>
-<%--					<g:actionSubmit params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');"/>--%>
-						<g:submitToRemote params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" before="if(!confirm('Are you sure?')) return false"/>
-<%--					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />--%>
+<%--				IF FINAL, DO NOT SHOW, EDIT, FINAL AND DELETE OPTIONS	--%>
+					<g:if test="${noteItemInstance?.status != 'final'}">						
+						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="edit" action="edit" id="${noteItemInstance.id}"><g:message code="default.button.edit.label" default="Edit" /></g:remoteLink>
+						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="finalizeNote" id="${noteItemInstance.id}"><g:message code="default.button.finalizeNote.label" default="Finalize" /></g:remoteLink>
+	<%--					<g:actionSubmit params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');"/>--%>
+							<g:submitToRemote params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" before="if(!confirm('Are you sure yu want to delete this note?')) return false"/>
+	<%--					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />--%>
+					</g:if>
+					<g:else>
+						Note is finalized, and can not be edited or deleted.
+					</g:else>
 				</fieldset>
 			</g:form>
 		</div>

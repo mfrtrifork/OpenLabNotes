@@ -104,36 +104,72 @@ class NoteItemController {
             redirect(action: "show", id: id)
         }
     }
-	def finalizeNote() {
+	def finalizeNote(Long id) {
+		println("finalizeNote");
+		def noteItemInstance = NoteItem.get(id)
+		if (!noteItemInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
+			redirect(action: "list")
+			return
+		}
+		[noteItemInstance: noteItemInstance]
+//		def noteItemInstance = NoteItem.get(params.id)
+//		if (!noteItemInstance) {
+//			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
+//			redirect(action: "list")
+//			return
+//		}
+//		params.status = 'final';
+//		noteItemInstance.properties = params
+//		
+//		/* Remove attributes which shouldn't be hashed */
+//		params.remove('status')	
+//		params.remove('version')
+//		params.remove('controller')
+//		params.remove('lang')
+//		params.remove('action')
+//		/* Set username in string to be hashed */
+//		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//		params.username = auth.name;
+//		String hash = params.toString()
+//		
+//		// STORE PASSWORD IN STRING
+//		
+//		println("finalizedNote before:" + noteItemInstance.finalizedNote)
+//		println("params before:" + hash)
+//		
+//		noteItemInstance.setFinalizedNote(sha256(hash))
+//		
+//		println("finalizedNote after:" + noteItemInstance.finalizedNote)
+//		redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
+	}
+	def actualFinalize(){
+		println("actualFinalize")
 		def noteItemInstance = NoteItem.get(params.id)
 		if (!noteItemInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
 			redirect(action: "list")
 			return
 		}
-		params.status = 'final';
+		[noteItemInstance: noteItemInstance]
+		
 		noteItemInstance.properties = params
 		
-		/* Remove attributes which shouldn't be hashed */
-		params.remove('status')	
+		params.remove('status')
 		params.remove('version')
+		params.remove('action')
 		params.remove('controller')
 		params.remove('lang')
-		params.remove('action')
-		/* Set username in string to be hashed */
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		params.username = auth.name;
 		String hash = params.toString()
-		
-		// STORE PASSWORD IN STRING
-		
-		println("finalizedNote before:" + noteItemInstance.finalizedNote)
-		println("params before:" + hash)
-		
 		noteItemInstance.setFinalizedNote(sha256(hash))
 		
-		println("finalizedNote after:" + noteItemInstance.finalizedNote)
-
+		println(noteItemInstance.finalizedNote)
+		if (!noteItemInstance.save(flush: true)) {
+			render(view: "edit", model: [noteItemInstance: noteItemInstance])
+			return
+		}
+		flash.message = message(code: 'Note was finalized', args: [message(code: 'noteItem.label', default: 'NoteItem'), noteItemInstance.id])
+		redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
 	}
 	static String sha256(String input) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA-256");

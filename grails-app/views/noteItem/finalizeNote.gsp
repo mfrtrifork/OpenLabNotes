@@ -4,7 +4,7 @@
 	<head>
 		<meta name="layout" content="${params.bodyOnly?'body':'main'}" />
 		<g:set var="entityName" value="${message(code: 'noteItem.label', default: 'NoteItem')}" />
-		<title><g:message code="default.edit.label" args="[entityName]" /></title>
+		<title><g:message code="default.finalizeNote.label" args="[entityName]" /></title>
 		
 <%--		<g:javascript src="js/tinymce/tinymce.min.js" />--%>
 <%--		<g:javascript src="js/tinymce/themes/modern/theme.min.js" />--%>
@@ -24,7 +24,7 @@
 <%--			</ul>--%>
 <%--		</div>--%>
 		<div id="edit-noteItem" class="content scaffold-edit" role="main">
-			<h1><g:message code="default.edit.label" args="[entityName]" /></h1>
+			<h1>Finalize Note</h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
@@ -38,12 +38,27 @@
 			<g:form method="post" >
 				<g:hiddenField name="id" value="${noteItemInstance?.id}" />
 				<g:hiddenField name="version" value="${noteItemInstance?.version}" />
+				<g:hiddenField name="status" value="final"/>
+				<g:hiddenField name="title" value="${noteItemInstance?.title}"/>
+				<g:hiddenField name="note" value="${noteItemInstance?.note}"/>
 				<fieldset class="form">
-					<g:render template="form"/>
+					To finalize this note please confirm your password.
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<label for="password">Password</label>
+								</td>
+								<td>
+									<g:passwordField name="password" value="" style="width:99%"/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</fieldset>
 				<fieldset class="buttons">
 <%--					<g:actionSubmit class="save" action="update" value="${message(code: 'default.button.update.label', default: 'Update')}" />--%>
-					<g:submitToRemote update="body" action="update" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}"/>
+					<g:submitToRemote update="body" action="actualFinalize" class="save" value="${message(code: 'default.button.actualFinalize.label', default: 'Finalize')}"/>
 <%--					<g:submitToRemote update="body" action="finalizeNote" class="save" value="${message(code: 'default.button.finalize.label', default: 'Finalize')}"/>--%>
 <%--										<g:submitToRemote before="jQuery('#note').html(tinyMCE.activeEditor.getContent());" update="body" action="update" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}"/>z--%>
 <%--					<g:submitToRemote before="jQuery('#note').html(tinyMCE.activeEditor.getContent());if(!confirm('Are you sure you want to finalize this note?')) return false" update="body" action="finalizeNote" class="save" value="${message(code: 'default.button.finalize.label', default: 'Finalize')}"/>--%>
