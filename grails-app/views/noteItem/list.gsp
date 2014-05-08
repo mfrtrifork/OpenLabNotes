@@ -1,27 +1,36 @@
-
 <%@ page import="org.openlab.notes.NoteItem" %>
 <!DOCTYPE html>
 <html>
 	<head>
+	 	<g:setProvider library="prototype"/>
 		<meta name="layout" content="${params.bodyOnly?'body':'main'}" />
 		<g:set var="entityName" value="${message(code: 'noteItem.label', default: 'NoteItem')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
 	</head>
 	<body>
 		<a href="#list-noteItem" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
-<%--		<div class="nav" role="navigation">--%>
-<%--			<ul>--%>
-<%--				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>--%>
-<%--				<!--<li><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></li> REPLACED WITH THE ONE BELOW!-->--%>
-<%--				<li><g:remoteLink params="${[bodyOnly: true]}" update="body" class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:remoteLink></li>--%>
-<%--			</ul>--%>
-<%--		</div>--%>
+		<div class="nav" role="navigation">
+			<ul>
+				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
+				<li><g:remoteLink params="${[bodyOnly: true]}" update="body" class="create" action="create"><g:message code="New note" args="[entityName]" /></g:remoteLink></li>
+			</ul>
+		</div>
+
 		<div id="list-noteItem" class="content scaffold-list" role="main">
-<%--			<h1><g:message code="default.list.label" args="[entityName]" /></h1>--%>
-			<h1>Notes</h1>
+			<h1><g:message code="Note list" args="[entityName]" /></h1>
 			<g:if test="${flash.message}">
-			<div class="message" role="status">${flash.message}</div>
+				<div class="message" role="status">${flash.message}</div>
 			</g:if>
+			<div id="filter" class="boxShadow">
+                <h2>Filter options:</h2>
+                <div style="padding:15px;"/>
+	                <g:formRemote update="body" name="filterList" url="[controller: 'noteItem', action:'list']">
+	                    <g:hiddenField name="bodyOnly" value="${true}"/>
+	                    Results per page: <g:select name="max" value="${params.max?:10}" from="${10..100}" class="range"/>
+	                    <g:submitButton name="Filter"/>
+	                </g:formRemote>
+                </div>
+            </div>
 			<table>
 				<thead>
 					<tr>
@@ -56,8 +65,12 @@
 				</g:each>
 				</tbody>
 			</table>
+<%--			<div class="pagination">--%>
+<%--				<util:remotePaginate controller="noteItem" action="list" total="${noteItemInstanceTotal}" />--%>
+<%--				<g:paginate total="${noteItemInstanceTotal}" />--%>
+<%--			</div>--%>
 			<div class="pagination">
-				<g:paginate total="${noteItemInstanceTotal}" />
+				<g:remotePaginate total="${noteItemInstanceTotal?:0}" params="${params}" />
 			</div>
 		</div>
 	</body>

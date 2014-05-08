@@ -1,6 +1,7 @@
 package org.openlab.notes
 
 import java.security.MessageDigest
+
 import java.security.NoSuchAlgorithmException
 
 import org.springframework.dao.DataIntegrityViolationException
@@ -14,13 +15,20 @@ class NoteItemController {
     def index() {
         redirect(action: "list", params: params)
     }
-
-    def list(Integer max) {
-        params.max = Math.min(max ?: 15, 100)
+	def list = {
 		params.sort = "dateCreated"
 		params.order = "desc"
-        [noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count()]
-    }
+		params.max = Math.min(params.max ? params.int('max') : 10, 100)
+		[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: false]
+	}
+
+//    def list = {
+//		params.max = Math.min(15, 100)
+//        //params.max = Math.min(max ?: 15, 100)
+//		params.sort = "dateCreated"
+//        [noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: false]
+//		params.order = "desc"
+//    }
 
     def create() {
         [noteItemInstance: new NoteItem(params)]

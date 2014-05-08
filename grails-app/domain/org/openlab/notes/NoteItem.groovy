@@ -1,11 +1,16 @@
 package org.openlab.notes
 
-class NoteItem{
+import org.openlab.main.DataObject
+
+class NoteItem extends DataObject{
 	String title
 	String status
 	String note
 	String finalizedNote
-	Date dateCreated
+	
+	//User supervisor
+	
+	//Date dateCreated
 	long timeSpent = 0L
 	
 	
