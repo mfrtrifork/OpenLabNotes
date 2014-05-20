@@ -12,7 +12,7 @@ class NoteItem extends DataObject{
 	User supervisor
 	
 	//Date dateCreated
-	long timeSpent = 0L
+	//long timeSpent = 0L
 	
 	
 	String toString(){

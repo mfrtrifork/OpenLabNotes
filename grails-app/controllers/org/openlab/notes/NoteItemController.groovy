@@ -14,6 +14,8 @@ class NoteItemController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST", finalize: "POST"]
 
+	def scaffold = true
+	
     def index() {
         redirect(action: "list", params: params)
     }
