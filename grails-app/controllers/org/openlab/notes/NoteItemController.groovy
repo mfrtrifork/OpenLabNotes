@@ -1,6 +1,8 @@
 package org.openlab.notes
 
+
 import java.security.MessageDigest
+import org.openlab.security.User
 
 import java.security.NoSuchAlgorithmException
 
@@ -16,10 +18,12 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
+		//println("max: " + params.int('max'))
 		params.sort = "dateCreated"
 		params.order = "desc"
-		params.max = Math.min(params.max ? params.int('max') : 10, 100)
-		[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: false]
+		params.max = 10
+		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
+		[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
 	}
 
 //    def list = {
@@ -31,11 +35,27 @@ class NoteItemController {
 //    }
 
     def create() {
-        [noteItemInstance: new NoteItem(params)]
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		def users = User.findAll {
+			username != auth.name
+		}
+        [noteItemInstance: new NoteItem(params), users: users]
     }
 
     def save() {
+		println("STARTING SAVE")
+		def supervisor = User.find{id == params.supervisor}
+		println("FOUND SUPERVISOR")
+		println(supervisor)
+		params.remove('supervisor')
+		println(params)
+		println("REMOVED SUPERVISOR FROM PARAMETERS")
+		//params.supervisor(supervisor)
         def noteItemInstance = new NoteItem(params)
+		println("CREATED THE NOTE")
+		noteItemInstance.supervisor = supervisor
+		println("SAT THE SUPERVISOR")
+		println("=========================================2")
         if (!noteItemInstance.save(flush: true, failOnError:true)) {
             render(view: "create", model: [noteItemInstance: noteItemInstance])
             return
@@ -52,8 +72,18 @@ class NoteItemController {
             redirect(action: "list")
             return
         }
-
-        [noteItemInstance: noteItemInstance]
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		def creator = false
+		def supervisor = false
+		println(auth.name)
+		println(noteItemInstance.creator.toString())
+		if(auth.name == noteItemInstance.creator.toString()){
+			creator = true
+		}else{
+			// Check if supervisor
+		}
+		
+        [noteItemInstance: noteItemInstance, creator: creator, supervisor: supervisor]
         
     }
 
@@ -164,6 +194,8 @@ class NoteItemController {
 		[noteItemInstance: noteItemInstance]
 		
 		noteItemInstance.properties = params
+		
+		println(noteItemInstance.creator.id)
 		
 		params.remove('status')
 		params.remove('version')

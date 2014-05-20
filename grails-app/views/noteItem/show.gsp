@@ -80,8 +80,11 @@
 				<fieldset class="buttons">
 					<g:hiddenField name="id" value="${noteItemInstance?.id}" />
 <%--				IF FINAL, DO NOT SHOW, EDIT, FINAL AND DELETE OPTIONS	--%>
-					<g:if test="${noteItemInstance?.status != 'final'}">						
-						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="edit" action="edit" id="${noteItemInstance.id}"><g:message code="default.button.edit.label" default="Edit" /></g:remoteLink>
+					<g:if test="${noteItemInstance?.status != 'final'}">
+						<g:if test="${creator}">
+							<g:remoteLink params="${[bodyOnly: true]}" update="body" class="edit" action="edit" id="${noteItemInstance.id}"><g:message code="default.button.edit.label" default="Edit" /></g:remoteLink>
+						</g:if>
+						
 						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="finalizeNote" id="${noteItemInstance.id}"><g:message code="default.button.finalizeNote.label" default="Finalize" /></g:remoteLink>
 	<%--					<g:actionSubmit params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');"/>--%>
 							<g:submitToRemote params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" before="if(!confirm('Are you sure yu want to delete this note?')) return false"/>

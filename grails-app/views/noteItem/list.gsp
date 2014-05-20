@@ -15,7 +15,6 @@
 				<li><g:remoteLink params="${[bodyOnly: true]}" update="body" class="create" action="create"><g:message code="New note" args="[entityName]" /></g:remoteLink></li>
 			</ul>
 		</div>
-
 		<div id="list-noteItem" class="content scaffold-list" role="main">
 			<h1><g:message code="Note list" args="[entityName]" /></h1>
 			<g:if test="${flash.message}">
@@ -32,15 +31,23 @@
                 </div>
             </div>
 			<table>
-				<thead>
 					<tr>
-					<g:sortableColumn property="title" title="${message(code: 'noteItem.title.label', default: 'Title')}" />
+				<thead>
+					<th>Title</th>
+					<th>State</th>
+					<th>Created</th>
+					<th>Creator</th>
+					<th>Last modified</th>
+					<th>Last modifier</th>
+					<th>Supervisor</th>
+					
+<%--					<g:sortableColumn property="title" title="${message(code: 'noteItem.title.label', default: 'Title')}" />--%>
 						
 					
 <%--						<g:sortableColumn property="note" title="${message(code: 'noteItem.note.label', default: 'Note')}" />--%>
 					
-						<g:sortableColumn property="status" title="${message(code: 'noteItem.status.label', default: 'Status')}" />
-					<g:sortableColumn property="dateCreated" title="${message(code: 'noteItem.dateCreated.label', default: 'Date Created')}" />
+<%--						<g:sortableColumn property="status" title="${message(code: 'noteItem.status.label', default: 'Status')}" />--%>
+<%--					<g:sortableColumn property="dateCreated" title="${message(code: 'noteItem.dateCreated.label', default: 'Date Created')}" />--%>
 <%--						<g:sortableColumn property="timeSpent" title="${message(code: 'noteItem.timeSpent.label', default: 'Time Spent')}" />--%>
 					
 						
@@ -60,7 +67,10 @@
 <%--						<td>${fieldValue(bean: noteItemInstance, field: "timeSpent")}</td>--%>
 					
 						<td>${fieldValue(bean: noteItemInstance, field: "dateCreated")}</td>
-					
+						<td>${fieldValue(bean: noteItemInstance, field: "creator.userRealName")}</td>
+						<td>${fieldValue(bean: noteItemInstance, field: "lastUpdate")}</td>
+						<td>${fieldValue(bean: noteItemInstance, field: "lastModifier.userRealName")}</td>
+						<td>${fieldValue(bean: noteItemInstance, field: "supervisor.userRealName")}</td>
 					</tr>
 				</g:each>
 				</tbody>
@@ -70,7 +80,7 @@
 <%--				<g:paginate total="${noteItemInstanceTotal}" />--%>
 <%--			</div>--%>
 			<div class="pagination">
-				<g:remotePaginate total="${noteItemInstanceTotal?:0}" params="${params}" />
+				<g:remotePaginate total="${noteItemInstanceTotal?:0}" params="${params}"/>
 			</div>
 		</div>
 	</body>

@@ -47,6 +47,19 @@
 		</tr>
 		<tr>
 			<td>
+				<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'supervisor', 'error')} ">
+				<label for="supervisor">
+					<g:message code="noteItem.supervisor.label" default="Supervisor" />
+				</label>
+				</div>
+			</td>
+			<td>
+				<g:select name="supervisor" from="${users}" value="${{user?.id}}" optionKey="id" optionValue="${{it.userRealName}}" />
+<%--				<g:select name="supervisor" from="${users.list()}" value="${users?.id}" optionKey="id" />--%>
+			</td>
+		</tr>
+		<tr>
+			<td>
 				<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'note', 'error')} ">
 				<label for="note">
 					<g:message code="noteItem.note.label" default="Note" />
