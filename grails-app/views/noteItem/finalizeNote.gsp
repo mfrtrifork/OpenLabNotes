@@ -53,6 +53,14 @@
 									<g:passwordField name="password" value="" style="width:99%"/>
 								</td>
 							</tr>
+							<tr>
+								<td>
+									<label for="supervisor">Supervisor</label>
+								</td>
+								<td>
+									<g:select name="supervisor" from="${users}" value="${{users}}" optionKey="id" optionValue="${{it.userRealName}}" />
+								</td>
+							</tr>
 						</tbody>
 					</table>
 				</fieldset>

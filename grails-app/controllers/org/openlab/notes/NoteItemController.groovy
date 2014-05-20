@@ -20,12 +20,16 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		//println("max: " + params.int('max'))
 		params.sort = "dateCreated"
 		params.order = "desc"
-		params.max = 10
+		params.creator = auth.name
+		User loggedInUser = User.find{username == auth.name}
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
-		[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
+		def notesList = NoteItem.findAllByCreatorOrSupervisor(loggedInUser, loggedInUser, [sort: "id", order: "desc"])
+		//[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
+		[noteItemInstanceList: notesList, noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
 	}
 
 //    def list = {
@@ -37,27 +41,17 @@ class NoteItemController {
 //    }
 
     def create() {
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		def users = User.findAll {
-			username != auth.name
-		}
-        [noteItemInstance: new NoteItem(params), users: users]
+        [noteItemInstance: new NoteItem(params)]
     }
 
     def save() {
-		println("STARTING SAVE")
-		def supervisor = User.find{id == params.supervisor}
-		println("FOUND SUPERVISOR")
-		println(supervisor)
-		params.remove('supervisor')
-		println(params)
-		println("REMOVED SUPERVISOR FROM PARAMETERS")
-		//params.supervisor(supervisor)
+//		/* Find supervisor from id */
+//		def supervisor = User.find{id == params.supervisor}
+//		/* Remove id from parameters */
+//		params.remove('supervisor')
         def noteItemInstance = new NoteItem(params)
-		println("CREATED THE NOTE")
-		noteItemInstance.supervisor = supervisor
-		println("SAT THE SUPERVISOR")
-		println("=========================================2")
+		/* Add the supervisor to the noteItem */
+		//noteItemInstance.supervisor = null
         if (!noteItemInstance.save(flush: true, failOnError:true)) {
             render(view: "create", model: [noteItemInstance: noteItemInstance])
             return
@@ -77,14 +71,16 @@ class NoteItemController {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		def creator = false
 		def supervisor = false
-		println(auth.name)
-		println(noteItemInstance.creator.toString())
+//		println(auth.name)
+//		println(noteItemInstance.creator.toString())
 		if(auth.name == noteItemInstance.creator.toString()){
 			creator = true
-		}else{
-			// Check if supervisor
 		}
-		
+		if(auth.name == noteItemInstance.supervisor.toString()){
+			supervisor = true
+		}
+		println("creator: " + creator)
+		println("supervisor: " + supervisor)
         [noteItemInstance: noteItemInstance, creator: creator, supervisor: supervisor]
         
     }
@@ -118,7 +114,6 @@ class NoteItemController {
         }
 
         noteItemInstance.properties = params
-
         if (!noteItemInstance.save(flush: true)) {
             render(view: "edit", model: [noteItemInstance: noteItemInstance])
             return
@@ -147,6 +142,10 @@ class NoteItemController {
         }
     }
 	def finalizeNote(Long id) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		def users = User.findAll {
+			username != auth.name
+		}
 		println("finalizeNote");
 		def noteItemInstance = NoteItem.get(id)
 		if (!noteItemInstance) {
@@ -154,38 +153,15 @@ class NoteItemController {
 			redirect(action: "list")
 			return
 		}
-		[noteItemInstance: noteItemInstance]
-//		def noteItemInstance = NoteItem.get(params.id)
-//		if (!noteItemInstance) {
-//			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
-//			redirect(action: "list")
-//			return
-//		}
-//		params.status = 'final';
-//		noteItemInstance.properties = params
-//		
-//		/* Remove attributes which shouldn't be hashed */
-//		params.remove('status')	
-//		params.remove('version')
-//		params.remove('controller')
-//		params.remove('lang')
-//		params.remove('action')
-//		/* Set username in string to be hashed */
-//		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//		params.username = auth.name;
-//		String hash = params.toString()
-//		
-//		// STORE PASSWORD IN STRING
-//		
-//		println("finalizedNote before:" + noteItemInstance.finalizedNote)
-//		println("params before:" + hash)
-//		
-//		noteItemInstance.setFinalizedNote(sha256(hash))
-//		
-//		println("finalizedNote after:" + noteItemInstance.finalizedNote)
-//		redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
+		[noteItemInstance: noteItemInstance, users:users]
 	}
 	def actualFinalize(){
+		println(params)
+		/* Find supervisor from id */
+		def supervisor = User.find{id == params.supervisor}
+		println(supervisor)
+		/* Remove id from parameters */
+		params.remove('supervisor')
 		println("actualFinalize")
 		def noteItemInstance = NoteItem.get(params.id)
 		if (!noteItemInstance) {
@@ -194,9 +170,9 @@ class NoteItemController {
 			return
 		}
 		[noteItemInstance: noteItemInstance]
-		
 		noteItemInstance.properties = params
-		
+		/* Add the supervisor to the noteItem */
+		noteItemInstance.supervisor = supervisor
 		println(noteItemInstance.creator.id)
 		
 		params.remove('status')
