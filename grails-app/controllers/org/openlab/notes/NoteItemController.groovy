@@ -1,7 +1,9 @@
 package org.openlab.notes
 
+import cr.co.arquetipos.crypto.*
 
 import java.security.MessageDigest
+
 import org.openlab.security.User
 
 import java.security.NoSuchAlgorithmException
@@ -20,11 +22,25 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
+		/* This encryption should be moved when done testing. Perhaps PGP should be saved for each user or note? */
+		def pgp = PGP.generateKeyPair()
+		println(pgp.getClass())
+		cr.co.arquetipos.crypto.PGP tests = pgp
+		String passphrase = 'demo0815'
+		String message = 'Hush Hush TESTING'
+		
+		String encodedPublic = pgp.encodedPublicKey
+		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
+
+		//PGP publicOnly = new PGP(encodedPublic, '')
+		PGP privateOnly = new PGP('', encodedPrivate, passphrase)
+		
+		String encrypted = privateOnly.encryptBase64(message)
+		println('Encrypted message: ' + encrypted)
+		String decrypted = pgp.decryptBase64(encrypted)
+		println('Decrypted message: ' + decrypted)
+		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		//println("max: " + params.int('max'))
-		params.sort = "dateCreated"
-		params.order = "desc"
-		params.creator = auth.name
 		User loggedInUser = User.find{username == auth.name}
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
 		def notesList = NoteItem.findAllByCreatorOrSupervisor(loggedInUser, loggedInUser, [sort: "id", order: "desc"])
@@ -32,26 +48,12 @@ class NoteItemController {
 		[noteItemInstanceList: notesList, noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
 	}
 
-//    def list = {
-//		params.max = Math.min(15, 100)
-//        //params.max = Math.min(max ?: 15, 100)
-//		params.sort = "dateCreated"
-//        [noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: false]
-//		params.order = "desc"
-//    }
-
     def create() {
         [noteItemInstance: new NoteItem(params)]
     }
 
     def save() {
-//		/* Find supervisor from id */
-//		def supervisor = User.find{id == params.supervisor}
-//		/* Remove id from parameters */
-//		params.remove('supervisor')
         def noteItemInstance = new NoteItem(params)
-		/* Add the supervisor to the noteItem */
-		//noteItemInstance.supervisor = null
         if (!noteItemInstance.save(flush: true, failOnError:true)) {
             render(view: "create", model: [noteItemInstance: noteItemInstance])
             return
@@ -71,16 +73,11 @@ class NoteItemController {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		def creator = false
 		def supervisor = false
-//		println(auth.name)
-//		println(noteItemInstance.creator.toString())
 		if(auth.name == noteItemInstance.creator.toString()){
 			creator = true
-		}
-		if(auth.name == noteItemInstance.supervisor.toString()){
+		}else if(auth.name == noteItemInstance.supervisor.toString()){
 			supervisor = true
 		}
-		println("creator: " + creator)
-		println("supervisor: " + supervisor)
         [noteItemInstance: noteItemInstance, creator: creator, supervisor: supervisor]
         
     }
@@ -146,7 +143,6 @@ class NoteItemController {
 		def users = User.findAll {
 			username != auth.name
 		}
-		println("finalizeNote");
 		def noteItemInstance = NoteItem.get(id)
 		if (!noteItemInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
