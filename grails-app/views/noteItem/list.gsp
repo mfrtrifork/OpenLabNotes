@@ -11,8 +11,7 @@
 		<a href="#list-noteItem" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></li>
+				<li><g:remoteLink params="${[bodyOnly: true]}" update="body" class="create" action="create"><g:message code="New note" args="[entityName]" /></g:remoteLink></li>
 			</ul>
 		</div>
 		<div id="list-noteItem" class="content scaffold-list" role="main">
@@ -23,7 +22,7 @@
 			<table>
 				<thead>
 					<tr>
-					
+						<g:sortableColumn property="title" title="${message(code: 'noteItem.title.label', default: 'Title')}" />
 						<th><g:message code="noteItem.creator.label" default="Creator" /></th>
 					
 						<th><g:message code="noteItem.lastModifier.label" default="Last Modifier" /></th>
@@ -31,8 +30,6 @@
 						<g:sortableColumn property="lastUpdate" title="${message(code: 'noteItem.lastUpdate.label', default: 'Last Update')}" />
 					
 						<g:sortableColumn property="dateCreated" title="${message(code: 'noteItem.dateCreated.label', default: 'Date Created')}" />
-					
-						<g:sortableColumn property="title" title="${message(code: 'noteItem.title.label', default: 'Title')}" />
 
 					</tr>
 				</thead>
@@ -40,7 +37,9 @@
 				<g:each in="${noteItemInstanceList}" status="i" var="noteItemInstance">
 					<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
 					
-						<td><g:link action="show" id="${noteItemInstance.id}">${fieldValue(bean: noteItemInstance, field: "creator")}</g:link></td>
+						<td><g:remoteLink params="${[bodyOnly: true]}" update="body" action="show" id="${noteItemInstance.id}">${fieldValue(bean: noteItemInstance, field: "title")}</g:remoteLink></td>
+
+						<td>${fieldValue(bean: noteItemInstance, field: "creator")}</td>
 					
 						<td>${fieldValue(bean: noteItemInstance, field: "lastModifier")}</td>
 					
@@ -48,7 +47,7 @@
 					
 						<td><g:formatDate date="${noteItemInstance.dateCreated}" /></td>
 					
-						<td>${fieldValue(bean: noteItemInstance, field: "title")}</td>
+
 
 					</tr>
 				</g:each>

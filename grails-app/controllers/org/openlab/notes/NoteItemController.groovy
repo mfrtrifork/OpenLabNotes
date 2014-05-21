@@ -22,23 +22,23 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
-		/* This encryption should be moved when done testing. Perhaps PGP should be saved for each user or note? */
-		def pgp = PGP.generateKeyPair()
-		println(pgp.getClass())
-		cr.co.arquetipos.crypto.PGP tests = pgp
-		String passphrase = 'demo0815'
-		String message = 'Hush Hush TESTING'
-		
-		String encodedPublic = pgp.encodedPublicKey
-		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
-
-		//PGP publicOnly = new PGP(encodedPublic, '')
-		PGP privateOnly = new PGP('', encodedPrivate, passphrase)
-		
-		String encrypted = privateOnly.encryptBase64(message)
-		println('Encrypted message: ' + encrypted)
-		String decrypted = pgp.decryptBase64(encrypted)
-		println('Decrypted message: ' + decrypted)
+//		/* This encryption should be moved when done testing. Perhaps PGP should be saved for each user or note? */
+//		def pgp = PGP.generateKeyPair()
+//		println(pgp.getClass())
+//		cr.co.arquetipos.crypto.PGP tests = pgp
+//		String passphrase = 'demo0815'
+//		String message = 'Hush Hush TESTING'
+//		
+//		String encodedPublic = pgp.encodedPublicKey
+//		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
+//
+//		//PGP publicOnly = new PGP(encodedPublic, '')
+//		PGP privateOnly = new PGP('', encodedPrivate, passphrase)
+//		
+//		String encrypted = privateOnly.encryptBase64(message)
+//		println('Encrypted message: ' + encrypted)
+//		String decrypted = pgp.decryptBase64(encrypted)
+//		println('Decrypted message: ' + decrypted)
 		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User loggedInUser = User.find{username == auth.name}
@@ -64,6 +64,7 @@ class NoteItemController {
     }
 
     def show(Long id) {
+		println("SHOW")
         def noteItemInstance = NoteItem.get(id)
         if(!noteAccessService.grantAccess(noteItemInstance)){
             flash.message = "You do not have access to this particular note!"
@@ -74,7 +75,15 @@ class NoteItemController {
             redirect(action: "list")
             return
         }
-        [noteItemInstance: noteItemInstance, bodyOnly: true]
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		def creator = false
+		def supervisor = false
+		if(auth.name == noteItemInstance.creator.toString()){
+			creator = true
+		}else if(auth.name == noteItemInstance.supervisor.toString()){
+			supervisor = true
+		}
+        [noteItemInstance: noteItemInstance, bodyOnly: true, creator: creator, supervisor: supervisor]
 
     }
 
