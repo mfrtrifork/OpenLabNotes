@@ -26,4 +26,6 @@ Servers
 .classpath
 .project
 .class
+/target/classes/
+/src/
 TODO

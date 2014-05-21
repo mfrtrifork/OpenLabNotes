@@ -15,8 +15,7 @@ class NoteItem extends DataObject{
 	}
 	
     static constraints = {
-		title(blank:false)
-		//title blank: false
+		title blank: false
 		note blank: false
 		finalizedNote nullable: true
 		supervisor nullable: true
