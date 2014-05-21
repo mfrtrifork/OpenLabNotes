@@ -23,10 +23,15 @@ class NoteItemController {
     }
 	def list = {
 //		/* This encryption should be moved when done testing. Perhaps PGP should be saved for each user or note? */
-//		def pgp = PGP.generateKeyPair()
+		String passphrase = 'demo0815'
+		def pgp = PGP.generateKeyPair()
 //		println(pgp.getClass())
+		String encodedPublic = pgp.encodedPublicKey
+		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
+		println("Public " + encodedPublic)
+		println("Private with passphrase " + encodedPrivate)
 //		cr.co.arquetipos.crypto.PGP tests = pgp
-//		String passphrase = 'demo0815'
+
 //		String message = 'Hush Hush TESTING'
 //		
 //		String encodedPublic = pgp.encodedPublicKey
@@ -176,6 +181,7 @@ class NoteItemController {
 		println(params)
 		/* Find supervisor from id */
 		def supervisor = User.find{id == params.supervisor}
+		String passphrase = params.password
 		println(supervisor)
 		/* Remove id from parameters */
 		params.remove('supervisor')
@@ -197,6 +203,8 @@ class NoteItemController {
 		params.remove('action')
 		params.remove('controller')
 		params.remove('lang')
+		params.remove('password')
+		println(params)
 		String hash = params.toString()
 		noteItemInstance.setFinalizedNote(sha256(hash))
 		
