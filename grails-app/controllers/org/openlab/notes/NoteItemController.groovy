@@ -16,8 +16,8 @@ class NoteItemController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST", finalize: "POST"]
 
-	def scaffold = true
-	
+    def noteAccessService
+
     def index() {
         redirect(action: "list", params: params)
     }
@@ -49,7 +49,7 @@ class NoteItemController {
 	}
 
     def create() {
-        [noteItemInstance: new NoteItem(params)]
+        [noteItemInstance: new NoteItem(params), bodyOnly: true]
     }
 
     def save() {
@@ -65,35 +65,39 @@ class NoteItemController {
 
     def show(Long id) {
         def noteItemInstance = NoteItem.get(id)
+        if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+        }
         if (!noteItemInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
             redirect(action: "list")
             return
         }
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		def creator = false
-		def supervisor = false
-		if(auth.name == noteItemInstance.creator.toString()){
-			creator = true
-		}else if(auth.name == noteItemInstance.supervisor.toString()){
-			supervisor = true
-		}
-        [noteItemInstance: noteItemInstance, creator: creator, supervisor: supervisor]
-        
+        [noteItemInstance: noteItemInstance, bodyOnly: true]
+
     }
 
     def edit(Long id) {
         def noteItemInstance = NoteItem.get(id)
+        if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+        }
         if (!noteItemInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
             redirect(action: "list")
             return
         }
-        [noteItemInstance: noteItemInstance]
+        [noteItemInstance: noteItemInstance, bodyOnly: true]
     }
 
     def update(Long id, Long version) {
         def noteItemInstance = NoteItem.get(id)
+        if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+        }
         if (!noteItemInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
             redirect(action: "list")
@@ -127,6 +131,14 @@ class NoteItemController {
             redirect(action: "list")
             return
         }
+        else if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+        }
+        else if(noteItemInstance.status != "open"){
+            flash.message = "You are not allowed to delete finalized notes"
+            redirect(action: "show", id: id)
+        }
 
         try {
             noteItemInstance.delete(flush: true, failOnError:true)
@@ -149,7 +161,7 @@ class NoteItemController {
 			redirect(action: "list")
 			return
 		}
-		[noteItemInstance: noteItemInstance, users:users]
+		[noteItemInstance: noteItemInstance, users:users, bodyOnly: true]
 	}
 	def actualFinalize(){
 		println(params)

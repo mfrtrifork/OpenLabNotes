@@ -3,17 +3,12 @@ package org.openlab.notes
 import org.openlab.main.DataObject
 import org.openlab.security.User
 
-
 class NoteItem extends DataObject{
 	String title
 	String status
 	String note
 	String finalizedNote
 	User supervisor
-	
-	//Date dateCreated
-	//long timeSpent = 0L
-	
 	
 	String toString(){
 		title
@@ -29,6 +24,9 @@ class NoteItem extends DataObject{
     }
 	static mapping = {
 		note type: 'text'
-		//table 'olfNoteItem'
+		table 'olfNoteItem'
 	}
+
+    static String type = "noteItem"
+    static String typeLabel = "NoteItem"
 }
