@@ -43,7 +43,7 @@ class NoteItemController {
 		User loggedInUser = User.find{username == auth.name}
 		String passphrase = 'demo0815'
 		try{
-			File pgpKeyRingFile = new File("newFileNotSaved")
+//			File pgpKeyRingFile = new File("newFileNotSaved")
 			
 			BigInteger primeModulous = PGPTools.getSafePrimeModulus(PGPTools.PRIME_MODULUS_4096_BIT);
 			BigInteger baseGenerator = PGPTools.getBaseGenerator();
@@ -56,7 +56,7 @@ class NoteItemController {
 				dsaKeyPair,
 				elGamalKeyPair,
 				auth.name,
-				passphrase.toCharArray()
+				'demo0815'.toCharArray()
 			);
 		} catch(Exception ex){
 			ex.printStackTrace()
