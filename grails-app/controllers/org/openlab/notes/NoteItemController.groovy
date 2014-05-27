@@ -1,7 +1,24 @@
 package org.openlab.notes
 
+//import crypttools.PGPTools
+
+
+//import java.security.KeyPair;
+//import java.security.KeyPairGenerator;
+//import java.security.PrivateKey;
+//import java.security.PublicKey;
+//import java.security.SecureRandom;
+//import java.security.Security;
+//import java.security.Signature;
+import javax.crypto.SecretKeyFactory
+
 import cr.co.arquetipos.crypto.*
 
+import crypttools.PGPTools
+import org.bouncycastle.jce.spec.ElGamalParameterSpec
+import org.bouncycastle.openpgp.PGPKeyRingGenerator
+
+import java.security.KeyPair
 import java.security.MessageDigest
 
 import org.openlab.security.User
@@ -22,31 +39,29 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
-//		/* This encryption should be moved when done testing. Perhaps PGP should be saved for each user or note? */
-		String passphrase = 'demo0815'
-		def pgp = PGP.generateKeyPair()
-//		println(pgp.getClass())
-		String encodedPublic = pgp.encodedPublicKey
-		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
-		println("Public " + encodedPublic)
-		println("Private with passphrase " + encodedPrivate)
-//		cr.co.arquetipos.crypto.PGP tests = pgp
-
-//		String message = 'Hush Hush TESTING'
-//		
-//		String encodedPublic = pgp.encodedPublicKey
-//		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
-//
-//		//PGP publicOnly = new PGP(encodedPublic, '')
-//		PGP privateOnly = new PGP('', encodedPrivate, passphrase)
-//		
-//		String encrypted = privateOnly.encryptBase64(message)
-//		println('Encrypted message: ' + encrypted)
-//		String decrypted = pgp.decryptBase64(encrypted)
-//		println('Decrypted message: ' + decrypted)
-		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User loggedInUser = User.find{username == auth.name}
+		String passphrase = 'demo0815'
+		try{
+			File pgpKeyRingFile = new File("newFileNotSaved")
+			
+			BigInteger primeModulous = PGPTools.getSafePrimeModulus(PGPTools.PRIME_MODULUS_4096_BIT);
+			BigInteger baseGenerator = PGPTools.getBaseGenerator();
+			ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
+			
+			KeyPair dsaKeyPair = PGPTools.generateDsaKeyPair(1024);
+			KeyPair elGamalKeyPair = PGPTools.generateElGamalKeyPair(paramSpecs);
+			
+			PGPKeyRingGenerator pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
+				dsaKeyPair,
+				elGamalKeyPair,
+				auth.name,
+				passphrase.toCharArray()
+			);
+		} catch(Exception ex){
+			ex.printStackTrace()
+		}
+		
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
 		def notesList = NoteItem.findAllByCreatorOrSupervisor(loggedInUser, loggedInUser, [sort: "id", order: "desc"])
 		//[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
@@ -54,6 +69,13 @@ class NoteItemController {
 	}
 
     def create() {
+		/* Check if user has keys for encryption */
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		User loggedInUser = User.find{username == auth.name}
+		def hasKeys = UserPGP.countByOwner(loggedInUser)
+		if(hasKeys == 0){
+			redirect(action: "createKeys", params: params)
+		}
         [noteItemInstance: new NoteItem(params), bodyOnly: true]
     }
 
@@ -69,7 +91,6 @@ class NoteItemController {
     }
 
     def show(Long id) {
-		println("SHOW")
         def noteItemInstance = NoteItem.get(id)
         if(!noteAccessService.grantAccess(noteItemInstance)){
             flash.message = "You do not have access to this particular note!"
@@ -168,6 +189,7 @@ class NoteItemController {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		def users = User.findAll {
 			username != auth.name
+			/* TODO: enabled = true */
 		}
 		def noteItemInstance = NoteItem.get(id)
 		if (!noteItemInstance) {
@@ -178,14 +200,18 @@ class NoteItemController {
 		[noteItemInstance: noteItemInstance, users:users, bodyOnly: true]
 	}
 	def actualFinalize(){
-		println(params)
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		User loggedInUser = User.find{username == auth.name}
+		
 		/* Find supervisor from id */
 		def supervisor = User.find{id == params.supervisor}
+		
+		/* TODO: Check if password is correct */
 		String passphrase = params.password
-		println(supervisor)
-		/* Remove id from parameters */
+		
+	
+		/* Remove supervisor from parameters */
 		params.remove('supervisor')
-		println("actualFinalize")
 		def noteItemInstance = NoteItem.get(params.id)
 		if (!noteItemInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
@@ -196,19 +222,29 @@ class NoteItemController {
 		noteItemInstance.properties = params
 		/* Add the supervisor to the noteItem */
 		noteItemInstance.supervisor = supervisor
-		println(noteItemInstance.creator.id)
 		
-		params.remove('status')
-		params.remove('version')
-		params.remove('action')
-		params.remove('controller')
-		params.remove('lang')
-		params.remove('password')
-		println(params)
-		String hash = params.toString()
-		noteItemInstance.setFinalizedNote(sha256(hash))
+		/* Get keys for user */
+		UserPGP userKeys = UserPGP.findByOwner(loggedInUser)
+		String encodedPublic = userKeys.encodedPublic
+		String encodedPrivate = userKeys.encodedPrivate
 		
-		println(noteItemInstance.finalizedNote)
+		/* TODO: Catch exception if password is incorrect */
+//		PGP pgp = new PGP(encodedPublic, encodedPrivate, passphrase)
+		
+//		PGP both  = new PGP(encodedPublic, encodedPrivate)
+//		PGP privateOnly = new PGP('', encodedPrivate)
+		
+//		PGP publicOnly = new PGP(encodedPublic, '')
+		
+//		String message = "Hush Hush"C
+//		String encrypted = publicOnly.encryptBase64(message)
+		
+		//String decrypted = publicOnly.decryptBase64(encrypted)
+		
+//		println(decrypted)
+		
+		return
+		
 		if (!noteItemInstance.save(flush: true)) {
 			render(view: "edit", model: [noteItemInstance: noteItemInstance])
 			return
@@ -216,13 +252,48 @@ class NoteItemController {
 		flash.message = message(code: 'Note was finalized', args: [message(code: 'noteItem.label', default: 'NoteItem'), noteItemInstance.id])
 		redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
 	}
-	static String sha256(String input) throws NoSuchAlgorithmException {
-		MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-		byte[] result = mDigest.digest(input.getBytes());
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < result.length; i++) {
-			sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
+	
+	def createKeys(){
+		[UserPGPInstance: new UserPGP(params), bodyOnly: true]
+	}
+	
+	def saveKeys(){
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		User loggedInUser = User.find{username == auth.name}
+		
+		/* TODO: Check if password is correct */
+		String passphrase = params.password
+		params.remove('password')
+		try{
+			File pgpKeyRingFile = new File()
+			BigInteger primeModulous = PGPTools.getSafePrimeModulus(PGPTools.PRIME_MODULUS_4096_BIT);
+			BigInteger baseGenerator = PGPTools.getBaseGenerator();
+			ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
+			PGPKeyRingGenerator pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
+				dsaKeyPair,
+				elGamalKeyPair,
+				auth.name,
+				passphrase.toCharArray()
+			);
+		} catch(Exception ex){
+			ex.printStackTrace()
 		}
-		return sb.toString();
+//		def pgp = PGP.generateKeyPair()
+//		String encodedPublic = pgp.encodedPublicKey
+//		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
+//		
+//		
+//
+//		def UserPGPInstance = new UserPGP()
+//		UserPGPInstance.owner = loggedInUser
+//		UserPGPInstance.encodedPublic = encodedPublic
+//		UserPGPInstance.encodedPrivate = encodedPrivate
+//		
+//		if(!UserPGPInstance.save(flush: true, failOnError:true)) {
+//            render(view: "createKeys", model: [UserPGPInstance: UserPGPInstance])
+//            return
+//        }
+//		flash.message = 'Public and private keys has been generated for your account'
+//		redirect(action: "create", params:[bodyOnly: true])		
 	}
 }

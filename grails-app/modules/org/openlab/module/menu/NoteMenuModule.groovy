@@ -22,7 +22,6 @@ class NoteMenuModule implements MenuModule{
                             {
                                 menuitem(controller: controller, action: 'create', label: 'Create new Note')
                                 menuitem(controller: controller, action: 'list', label: 'List Notes')
-//                                menuitem(controller: controller, action: 'listStockItemsToOrder', label: 'List Lab Stocks that need ordering')
                             }
                 }
 
