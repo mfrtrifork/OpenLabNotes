@@ -12,6 +12,7 @@ package org.openlab.notes
 //import java.security.Signature;
 import javax.crypto.SecretKeyFactory
 
+
 import cr.co.arquetipos.crypto.*
 
 import crypttools.PGPTools
@@ -55,7 +56,7 @@ class NoteItemController {
 			PGPKeyRingGenerator pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
 				dsaKeyPair,
 				elGamalKeyPair,
-				auth.name,
+				'TEST',
 				'demo0815'.toCharArray()
 			);
 		} catch(Exception ex){
