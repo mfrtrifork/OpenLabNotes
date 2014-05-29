@@ -1,17 +1,16 @@
 <%@ page import="org.openlab.notes.NoteItem" %>
 
-<%--		<script>--%>
-<%--		tinymce.init({--%>
-<%--			menubar:false,--%>
-<%--			plugins: [--%>
-<%--		               --%>
-<%--		                "table textcolor code"--%>
-<%--		        ],--%>
-<%--		    selector: "textarea",--%>
-<%--		    toolbar1: "cut copy paste | searchreplace | bullist numlist | outdent indent blockquote | undo redo | link unlink anchor image media code | inserttime preview | table",--%>
-<%--	        toolbar2: "bold italic underline strikethrough |formatselect fontselect fontsizeselect | alignleft aligncenter alignright alignjustify | forecolor backcolor",--%>
-<%--		});
-<%--		</script>--%>
+		<script>
+		tinymce.init({
+			menubar:false,
+			plugins: [
+		                "table textcolor code"
+		    ],
+		    selector: "textarea",
+		    toolbar1: "cut copy paste | searchreplace | bullist numlist | outdent indent blockquote | undo redo | link unlink anchor image media code | inserttime preview | table",
+	        toolbar2: "bold italic underline strikethrough |formatselect fontselect fontsizeselect | alignleft aligncenter alignright alignjustify | forecolor backcolor",
+		});
+		</script>
 
 <g:hiddenField name="status" value="open"/>
  

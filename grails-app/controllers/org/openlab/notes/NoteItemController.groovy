@@ -38,7 +38,7 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
-		new PGPCryptoBC()
+//		new PGPCryptoBC()
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User loggedInUser = User.find{username == auth.name}
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
@@ -53,7 +53,7 @@ class NoteItemController {
 		User loggedInUser = User.find{username == auth.name}
 		def hasKeys = UserPGP.countByOwner(loggedInUser)
 		if(hasKeys == 0){
-			redirect(action: "createKeys", params: params)
+//			redirect(action: "createKeys", params: params)
 		}
         [noteItemInstance: new NoteItem(params), bodyOnly: true]
     }
