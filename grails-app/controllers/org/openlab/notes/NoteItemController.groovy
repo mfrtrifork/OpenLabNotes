@@ -13,11 +13,9 @@ package org.openlab.notes
 import javax.crypto.SecretKeyFactory
 
 
-import cr.co.arquetipos.crypto.*
+//import cr.co.arquetipos.crypto.*
 
-import crypttools.PGPTools
-import org.bouncycastle.jce.spec.ElGamalParameterSpec
-import org.bouncycastle.openpgp.PGPKeyRingGenerator
+import crypttools.PGPCryptoBC
 
 import java.security.KeyPair
 import java.security.MessageDigest
@@ -40,29 +38,9 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
+		new PGPCryptoBC()
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User loggedInUser = User.find{username == auth.name}
-		String passphrase = 'demo0815'
-		try{
-//			File pgpKeyRingFile = new File("newFileNotSaved")
-			
-			BigInteger primeModulous = PGPTools.getSafePrimeModulus(PGPTools.PRIME_MODULUS_4096_BIT);
-			BigInteger baseGenerator = PGPTools.getBaseGenerator();
-			ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
-			
-			KeyPair dsaKeyPair = PGPTools.generateDsaKeyPair(1024);
-			KeyPair elGamalKeyPair = PGPTools.generateElGamalKeyPair(paramSpecs);
-			
-			PGPKeyRingGenerator pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
-				dsaKeyPair,
-				elGamalKeyPair,
-				'TEST',
-				'demo0815'.toCharArray()
-			);
-		} catch(Exception ex){
-			ex.printStackTrace()
-		}
-		
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
 		def notesList = NoteItem.findAllByCreatorOrSupervisor(loggedInUser, loggedInUser, [sort: "id", order: "desc"])
 		//[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
@@ -265,20 +243,6 @@ class NoteItemController {
 		/* TODO: Check if password is correct */
 		String passphrase = params.password
 		params.remove('password')
-		try{
-			File pgpKeyRingFile = new File()
-			BigInteger primeModulous = PGPTools.getSafePrimeModulus(PGPTools.PRIME_MODULUS_4096_BIT);
-			BigInteger baseGenerator = PGPTools.getBaseGenerator();
-			ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
-			PGPKeyRingGenerator pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
-				dsaKeyPair,
-				elGamalKeyPair,
-				auth.name,
-				passphrase.toCharArray()
-			);
-		} catch(Exception ex){
-			ex.printStackTrace()
-		}
 //		def pgp = PGP.generateKeyPair()
 //		String encodedPublic = pgp.encodedPublicKey
 //		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
