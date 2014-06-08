@@ -9,13 +9,6 @@
 	</head>
 	<body>
 	<a href="#show-noteItem" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
-<%--		<div class="nav" role="navigation">--%>
-<%--			<ul>--%>
-<%--				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>--%>
-<%--				<li><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></li>--%>
-<%--				<li><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></li>--%>
-<%--			</ul>--%>
-<%--		</div>--%>
 		<div id="show-noteItem" class="content scaffold-show" role="main">
 			<h1><g:message code="default.show.label" args="[entityName]" /></h1>
 			<g:if test="${flash.message}">
@@ -24,12 +17,13 @@
 			<g:form>
 				<fieldset class="buttons">
 					<g:hiddenField name="id" value="${noteItemInstance?.id}" />
-<%--				IF FINAL, DO NOT SHOW, EDIT, FINAL AND DELETE OPTIONS	--%>
+					<%-- if note is draft and the user is the author, show edit,save and delete options --%>
 					<g:if test="${noteItemInstance?.status == 'draft' && creator}">
 						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="edit" action="edit" id="${noteItemInstance.id}"><g:message code="default.button.edit.label" default="Edit" /></g:remoteLink>
-						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="finalizeNote" id="${noteItemInstance.id}"><g:message code="default.button.finalizeNote.label" default="Finalize" /></g:remoteLink>
+						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="authorSign" id="${noteItemInstance.id}"><g:message code="default.button.authorSign.label" default="Finalize" /></g:remoteLink>
 						<g:submitToRemote params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" before="if(!confirm('Are you sure yu want to delete this note?')) return false"/>
 					</g:if>
+					<%-- if note is final and the user is the supervisor, show sign option --%>
 					<g:elseif test="${noteItemInstance?.status == 'final' && supervisor}">
 						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="supervisorSign" id="${noteItemInstance.id}"><g:message code="default.button.sign.label" default="Sign note" /></g:remoteLink>
 					</g:elseif>

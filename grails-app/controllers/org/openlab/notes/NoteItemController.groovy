@@ -43,8 +43,7 @@ class NoteItemController {
         redirect(action: "list", params: params)
     }
 	def list = {
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		User loggedInUser = User.find{username == auth.name}
+		User loggedInUser = springSecurityService.currentUser
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
 		def notesList = NoteItem.findAllByCreatorOrSupervisor(loggedInUser, loggedInUser, [sort: "id", order: "desc"])
 		//[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
@@ -53,10 +52,9 @@ class NoteItemController {
 
     def create() {
 		/* Check if user has keys for encryption */
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		User loggedInUser = User.find{username == auth.name}
-		def hasKeys = UserPGP.countByOwner(loggedInUser)
+		def hasKeys = UserPGP.countByOwner(springSecurityService.currentUser)
 		if(hasKeys == 0){
+			params.from = 'createNote'
 			redirect(action: "createKeys", params: params)
 		}
         [noteItemInstance: new NoteItem(params), bodyOnly: true]
@@ -84,16 +82,14 @@ class NoteItemController {
             redirect(action: "list")
             return
         }
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		def creator = false
 		def supervisor = false
-		if(auth.name == noteItemInstance.creator.toString()){
+		if(springSecurityService.currentUser == noteItemInstance.creator){
 			creator = true
-		}else if(auth.name == noteItemInstance.supervisor.toString()){
+		}else if(springSecurityService.currentUser == noteItemInstance.supervisor){
 			supervisor = true
 		}
 		[noteItemInstance: noteItemInstance, bodyOnly: true, creator: creator, supervisor: supervisor]
-
     }
 
     def edit(Long id) {
@@ -168,10 +164,10 @@ class NoteItemController {
             redirect(action: "show", id: id)
         }
     }
-	def finalizeNote(Long id) {
+	def authorSign(Long id) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		def users = User.findAll {
-			username != auth.name
+			username != springSecurityService.currentUser.toString()
 			/* TODO: enabled = true */
 		}
 		def noteItemInstance = NoteItem.get(id)
@@ -179,20 +175,26 @@ class NoteItemController {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
 			redirect(action: "list")
 			return
-		}
+		}else if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+        }
+		
 		[noteItemInstance: noteItemInstance, users:users, bodyOnly: true]
 	}
-	def actualFinalize(){
+	def authorSignNote(){
 		/* Check of noteItem exists */
 		def noteItemInstance = NoteItem.get(params.id)
 		if (!noteItemInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
 			redirect(action: "list")
 			return
-		}
-		/* Get user from username */
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		User loggedInUser = User.find{username == auth.name}
+		}else if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+        }
+		
+		User loggedInUser = springSecurityService.currentUser
 		
 		String passphrase = params.password
 		String username = loggedInUser
@@ -203,7 +205,7 @@ class NoteItemController {
 		if(!loggedInUser.password.equals(encodedPassword)){
 			flash.message = "Incorrect password!"
 			params.bodyOnly = true
-			redirect(action: "finalizeNote", params: params)
+			redirect(action: "authorSign", params: params)
 			return;
 		}
 		
@@ -233,14 +235,30 @@ class NoteItemController {
 		redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
 	}
 	
+	def supervisorSign(Long id) {
+		def noteItemInstance = NoteItem.get(id)
+		if (!noteItemInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
+			redirect(action: "list")
+			return
+		}else if(!noteAccessService.grantAccess(noteItemInstance)){
+			flash.message = "You do not have access to this particular note!"
+			redirect(action: "list")
+		}
+		
+		
+		[noteItemInstance: noteItemInstance, bodyOnly: true]
+	}
+	
 	def createKeys(){
-		[UserPGPInstance: new UserPGP(params), bodyOnly: true]
+		def from = params.from
+		[UserPGPInstance: new UserPGP(params), from :from , bodyOnly: true]
 	}
 	
 	def saveKeys(){
-		
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		User loggedInUser = User.find{username == auth.name}
+		def from = params.from
+		params.remove('from')
+		User loggedInUser = springSecurityService.currentUser
 		
 		String passphrase = params.password
 		String username = loggedInUser
@@ -250,7 +268,7 @@ class NoteItemController {
 		if(!loggedInUser.password.equals(encodedPassword)){
 			flash.message = "Incorrect password!"
             redirect(action: "createKeys", params:[bodyOnly: true])
-			return;
+			return
 		}
 		
 		/* Generate keys for user */
@@ -270,25 +288,9 @@ class NoteItemController {
 			return;
 		}
 		flash.message = 'Public and private keys has been generated for your account'
-		redirect(action: "create", params:[bodyOnly: true])
-		
-		//new PGPCryptoBC()
-//		def pgp = PGP.generateKeyPair()
-//		String encodedPublic = pgp.encodedPublicKey
-//		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
-//		
-//		
-//
-//		def UserPGPInstance = new UserPGP()
-//		UserPGPInstance.owner = loggedInUser
-//		UserPGPInstance.encodedPublic = encodedPublic
-//		UserPGPInstance.encodedPrivate = encodedPrivate
-//		
-//		if(!UserPGPInstance.save(flush: true, failOnError:true)) {
-//            render(view: "createKeys", model: [UserPGPInstance: UserPGPInstance])
-//            return
-//        }
-//		flash.message = 'Public and private keys has been generated for your account'
-//		redirect(action: "create", params:[bodyOnly: true])		
+		println(from)
+		if(from.equals('createNote')){
+			redirect(action: "create", params:[bodyOnly: true])
+		}
 	}
 }

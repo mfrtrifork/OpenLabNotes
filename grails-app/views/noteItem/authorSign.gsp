@@ -9,7 +9,7 @@
 	<body>
 		<a href="#edit-noteItem" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div id="edit-noteItem" class="content scaffold-edit" role="main">
-			<h1>Generate keys</h1>
+			<h1>Finalize note</h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
@@ -21,9 +21,13 @@
 			</ul>
 			</g:hasErrors>
 			<g:form method="post" onsubmit="return false;">
+				<g:hiddenField name="id" value="${noteItemInstance?.id}" />
+				<g:hiddenField name="version" value="${noteItemInstance?.version}" />
+				<g:hiddenField name="status" value="final"/>
+				<g:hiddenField name="title" value="${noteItemInstance?.title}"/>
+				<g:hiddenField name="note" value="${noteItemInstance?.note}"/>
 				<fieldset class="form">
-					<g:hiddenField name="from" value="${from}" />
-					For security reasons we need to generate keys for encryption of notes. Please confirm your password.
+					Please confirm your password to finalize this note.
 					<table>
 						<tbody>
 							<tr>
@@ -34,11 +38,19 @@
 									<g:passwordField name="password" value="" style="width:99%"/>
 								</td>
 							</tr>
+							<tr>
+								<td>
+									<label for="supervisor">Supervisor</label>
+								</td>
+								<td>
+									<g:select name="supervisor" from="${users}" value="${{users}}" optionKey="id" optionValue="${{it.userRealName}}" />
+								</td>
+							</tr>
 						</tbody>
 					</table>
 				</fieldset>
 				<fieldset class="buttons">
-					<g:submitToRemote update="body" action="saveKeys" class="save" value="${message(code: 'default.button.saveKeys.label', default: 'Generate keys')}"/>
+					<g:submitToRemote update="body" action="authorSignNote" class="save" value="${message(code: 'default.button.authorSignNote.label', default: 'Sign and finalize note')}"/>
 				</fieldset>
 			</g:form>
 		</div>

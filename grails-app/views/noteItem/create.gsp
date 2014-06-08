@@ -26,8 +26,6 @@
 				</fieldset>
 				<fieldset class="buttons">
 					<g:submitToRemote before="jQuery('#note').html(tinyMCE.activeEditor.getContent());" update="body" action="save" name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}"/>
-<%--					<g:submitToRemote update="body" action="save" name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}"/>--%>
-<%--						<g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" />--%>
 				</fieldset>
 			</g:form>
 		</div>

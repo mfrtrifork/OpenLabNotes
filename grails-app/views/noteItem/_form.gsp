@@ -12,23 +12,7 @@
 		});
 		</script>
 
-<g:hiddenField name="status" value="open"/>
- 
-<%--<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'status', 'error')} ">--%>
-<%--	<label for="status">--%>
-<%--		<g:message code="noteItem.status.label" default="Status" />--%>
-<%--	</label>--%>
-<%--	<g:textField name="status" value="${noteItemInstance?.status}" />--%>
-<%--</div>--%>
-
-<%--<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'timeSpent', 'error')} ">--%>
-<%--	<label for="timeSpent">--%>
-<%--		<g:message code="noteItem.timeSpent.label" default="Time Spent" />--%>
-<%--		--%>
-<%--	</label>--%>
-<%--	<g:field type="number" name="timeSpent" value="${noteItemInstance.timeSpent}" />--%>
-<%--</div>--%>
-
+<g:hiddenField name="status" value="draft"/>
 <table>
 	<tbody>
 		<tr>
@@ -44,19 +28,6 @@
 				<g:textField name="title" value="${noteItemInstance?.title}" style="width:99%"/>
 			</td>
 		</tr>
-<%--		<tr>--%>
-<%--			<td>--%>
-<%--				<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'supervisor', 'error')} ">--%>
-<%--				<label for="supervisor">--%>
-<%--					<g:message code="noteItem.supervisor.label" default="Supervisor" />--%>
-<%--				</label>--%>
-<%--				</div>--%>
-<%--			</td>--%>
-<%--			<td>--%>
-<%--				<g:select name="noteItem.supervisor" from="${users}" value="${{users}}" optionKey="id" optionValue="${{it.userRealName}}" />--%>
-<%--				<g:select name="supervisor" from="${users.list()}" value="${users?.id}" optionKey="id" />--%>
-<%--			</td>--%>
-<%--		</tr>--%>
 		<tr>
 			<td>
 				<div class="fieldcontain ${hasErrors(bean: noteItemInstance, field: 'note', 'error')} ">
