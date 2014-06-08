@@ -25,16 +25,13 @@
 				<fieldset class="buttons">
 					<g:hiddenField name="id" value="${noteItemInstance?.id}" />
 <%--				IF FINAL, DO NOT SHOW, EDIT, FINAL AND DELETE OPTIONS	--%>
-					<g:if test="${noteItemInstance?.status == 'open' && creator}">
+					<g:if test="${noteItemInstance?.status == 'draft' && creator}">
 						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="edit" action="edit" id="${noteItemInstance.id}"><g:message code="default.button.edit.label" default="Edit" /></g:remoteLink>
 						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="finalizeNote" id="${noteItemInstance.id}"><g:message code="default.button.finalizeNote.label" default="Finalize" /></g:remoteLink>
 						<g:submitToRemote params="${[bodyOnly: true]}" update="body" action="delete" name="delete" class="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" before="if(!confirm('Are you sure yu want to delete this note?')) return false"/>
 					</g:if>
 					<g:elseif test="${noteItemInstance?.status == 'final' && supervisor}">
-						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="sign" id="${noteItemInstance.id}"><g:message code="default.button.sign.label" default="Sign" /></g:remoteLink>
-					</g:elseif>
-					<g:elseif test="${supervisor}">
-						Note is not finalized, and can not be signed.
+						<g:remoteLink params="${[bodyOnly: true]}" update="body" class="save" action="supervisorSign" id="${noteItemInstance.id}"><g:message code="default.button.sign.label" default="Sign note" /></g:remoteLink>
 					</g:elseif>
 					<g:else>
 						Note is finalized, and can not be edited or deleted.
@@ -77,14 +74,6 @@
 					
 				</li>
 				</g:if>
-<%--				This should be removed when deloyed--%>
-				<g:if test="${noteItemInstance?.finalizedNote}">
-				<li class="fieldcontain">
-					<span id="hash-label" class="property-label"><g:message code="noteItem.hash.label" default="Hash" /></span>
-						<span class="property-value" aria-labelledby="title-label"><g:fieldValue bean="${noteItemInstance}" field="finalizedNote"/></span>
-				</li>
-				</g:if>
-<%--				To here--%>
 			</ol>
 		</div>
 	</body>

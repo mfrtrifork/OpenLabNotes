@@ -67,36 +67,6 @@ public final class PGPTools {
  
     }
  
-    public static final void exportSecretKey(PGPKeyRingGenerator pgpKeyRingGen, File keyFile, boolean asciiArmor) throws IOException {
-        PGPSecretKeyRing pgpSecKeyRing = pgpKeyRingGen.generateSecretKeyRing();
- 
-        if(asciiArmor) {
-            ArmoredOutputStream aos = new ArmoredOutputStream(new FileOutputStream(keyFile));
-            pgpSecKeyRing.encode(aos);
-            aos.close();
-        }
-        else {
-            FileOutputStream fos = new FileOutputStream(keyFile);
-            pgpSecKeyRing.encode(fos);
-            fos.close();
-        }
-    }
- 
-    public static final void exportPublicKey(PGPKeyRingGenerator pgpKeyRingGen, File keyFile, boolean asciiArmor) throws IOException {
-        PGPPublicKeyRing pgpPubKeyRing = pgpKeyRingGen.generatePublicKeyRing();
- 
-        if(asciiArmor) {
-            ArmoredOutputStream aos = new ArmoredOutputStream(new FileOutputStream(keyFile));
-            pgpPubKeyRing.encode(aos);
-            aos.close();
-        }
-        else {
-            FileOutputStream fos = new FileOutputStream(keyFile);
-            pgpPubKeyRing.encode(fos);
-            fos.close();
-        }
-    }
- 
     /**
      * 
      * @param dsaKeyPair - the generated DSA key pair

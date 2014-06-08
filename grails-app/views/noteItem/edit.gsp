@@ -43,7 +43,7 @@
 				</fieldset>
 				<fieldset class="buttons">
 <%--					<g:actionSubmit class="save" action="update" value="${message(code: 'default.button.update.label', default: 'Update')}" />--%>
-					<g:submitToRemote update="body" action="update" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}"/>
+					<g:submitToRemote before="jQuery('#note').html(tinyMCE.activeEditor.getContent());" update="body" action="update" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}"/>
 <%--					<g:submitToRemote update="body" action="finalizeNote" class="save" value="${message(code: 'default.button.finalize.label', default: 'Finalize')}"/>--%>
 <%--										<g:submitToRemote before="jQuery('#note').html(tinyMCE.activeEditor.getContent());" update="body" action="update" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}"/>z--%>
 <%--					<g:submitToRemote before="jQuery('#note').html(tinyMCE.activeEditor.getContent());if(!confirm('Are you sure you want to finalize this note?')) return false" update="body" action="finalizeNote" class="save" value="${message(code: 'default.button.finalize.label', default: 'Finalize')}"/>--%>

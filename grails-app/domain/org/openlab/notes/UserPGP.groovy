@@ -7,8 +7,9 @@ import cr.co.arquetipos.crypto.*
 class UserPGP {
 
 	User owner
-	String encodedPublic
-	String encodedPrivate
+	String secretKey
+	String publicKey
+
 	
     static constraints = {
 		owner unique: true

@@ -1,9 +1,38 @@
 package crypttools;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.KeyPair;
+import java.util.Iterator;
+
+import org.apache.commons.io.FileUtils;
+import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.jce.spec.ElGamalParameterSpec;
+import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
  
 /**
  * 
@@ -25,12 +54,22 @@ import org.bouncycastle.openpgp.PGPKeyRingGenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+
+/**
+ * 
+ * @author franz
+ *	Edited for use in OpenLabFramework and store keys on domain class instead of files
+ */
 public class PGPCryptoBC {
- 
-    public PGPCryptoBC() {
+	
+	PGPKeyRingGenerator pgpKeyRingGen = null;
+	
+	byte[] armoredSecretKey = null;
+	byte[] armoredPublicKey = null;
+	
+	public void generateKeys(String username, String passphrase){
         try {
-            String keysDir = System.getProperty("user.dir")+File.separator+"mykeys";
-             
             BigInteger primeModulous = PGPTools.getSafePrimeModulus(PGPTools.PRIME_MODULUS_4096_BIT);
             BigInteger baseGenerator = PGPTools.getBaseGenerator();
             ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
@@ -38,22 +77,126 @@ public class PGPCryptoBC {
             KeyPair dsaKeyPair = PGPTools.generateDsaKeyPair(1024);
             KeyPair elGamalKeyPair = PGPTools.generateElGamalKeyPair(paramSpecs);
              
-            PGPKeyRingGenerator pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
+            this.pgpKeyRingGen = PGPTools.createPGPKeyRingGenerator(
                     dsaKeyPair,
                     elGamalKeyPair,
-                    "test@gmail.com",
-                    "TestPass12345!".toCharArray()
-                    );
-             
-            PGPTools.exportSecretKey(pgpKeyRingGen, new File(keysDir+File.separator+"secret.asc"), true);
-            PGPTools.exportPublicKey(pgpKeyRingGen, new File(keysDir+File.separator+"public.asc"), true);
+                    username,
+                    passphrase.toCharArray()
+            );
+            PGPSecretKeyRing pgpSecKeyRing = this.pgpKeyRingGen.generateSecretKeyRing();
+            PGPPublicKeyRing pgpPubKeyRing = this.pgpKeyRingGen.generatePublicKeyRing();
+            
+            /* Save secret key*/
+            ByteArrayOutputStream pgpSecKeyRingOutputStream = new ByteArrayOutputStream();
+            ArmoredOutputStream aosSecret = new ArmoredOutputStream(pgpSecKeyRingOutputStream);
+            pgpSecKeyRing.encode(aosSecret);
+            aosSecret.close();
+            this.armoredSecretKey = pgpSecKeyRingOutputStream.toByteArray();
+            
+            /* Save public key*/
+            ByteArrayOutputStream pgpPubKeyRingOutputStream = new ByteArrayOutputStream();
+            ArmoredOutputStream aosPublic = new ArmoredOutputStream(pgpPubKeyRingOutputStream);
+            pgpPubKeyRing.encode(aosPublic);
+            aosPublic.close();
+            this.armoredPublicKey = pgpPubKeyRingOutputStream.toByteArray();
         }
         catch(Exception ex) {
             ex.printStackTrace();
         }
-    }
-     
-    public static void main(String ... args) {
-        new PGPCryptoBC();
+	}
+	
+	public String signData(String data, String passphrase) throws Exception{
+		InputStream keyInputStream = new ByteArrayInputStream(this.armoredSecretKey);
+		PGPSecretKey pgpSecretKey = readSecretKey(keyInputStream);
+		PGPPrivateKey pgpPrivateKey = pgpSecretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder().setProvider("BC").build(passphrase.toCharArray()));
+		PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(new JcaPGPContentSignerBuilder(pgpSecretKey.getPublicKey().getAlgorithm(), PGPUtil.SHA1).setProvider("BC"));
+        signatureGenerator.init(PGPSignature.BINARY_DOCUMENT, pgpPrivateKey);
+ 		
+        @SuppressWarnings("unchecked")
+        Iterator<String> it = pgpSecretKey.getPublicKey().getUserIDs();
+        if (it.hasNext()) {
+            PGPSignatureSubpacketGenerator  spGen = new PGPSignatureSubpacketGenerator();
+            spGen.setSignerUserID(false, it.next());
+            signatureGenerator.setHashedSubpackets(spGen.generate());
+        }
+        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+        OutputStream outputStream = new ArmoredOutputStream(byteOutputStream);
+        PGPCompressedDataGenerator compressDataGenerator = new PGPCompressedDataGenerator(PGPCompressedData.ZLIB);
+        BCPGOutputStream bcOutputStream = new BCPGOutputStream(compressDataGenerator.open(outputStream));
+        signatureGenerator.generateOnePassVersion(false).encode(bcOutputStream);        
+        
+        PGPLiteralDataGenerator literalDataGenerator = new PGPLiteralDataGenerator();
+        File fileToSign = File.createTempFile("temp",".scrap");
+        FileUtils.writeStringToFile(fileToSign, data);
+        
+        OutputStream literalDataGenOutputStream = literalDataGenerator.open(bcOutputStream, PGPLiteralData.BINARY, fileToSign);
+        FileInputStream fis = new FileInputStream(fileToSign);
+        int ch;
+        while ((ch = fis.read()) >= 0) {
+            literalDataGenOutputStream.write(ch);
+            signatureGenerator.update((byte)ch);
+        }
+        
+        literalDataGenerator.close();
+        fis.close();
+ 
+        signatureGenerator.generate().encode(bcOutputStream);
+        compressDataGenerator.close();
+        outputStream.close();
+        
+        fileToSign.delete();
+        return new String(byteOutputStream.toByteArray(), "UTF-8");
+	}
+	
+	public String getSecretKey() throws UnsupportedEncodingException{
+		return new String(this.armoredSecretKey, "UTF-8");
+	}
+	public String getPublicKey() throws UnsupportedEncodingException{
+		return new String(this.armoredPublicKey, "UTF-8");
+	}
+	public void setSecretKey(String secretKey){
+		this.armoredSecretKey = secretKey.getBytes();
+	}
+	public void setPublicKey(String publicKey){
+		this.armoredPublicKey = publicKey.getBytes();
+	}
+
+
+	   /**
+     * <p>Return the first suitable key for encryption in the key ring
+     * collection. For this case we only expect there to be one key
+     * available for signing.</p>
+     * 
+     * @param input - the input stream of the key PGP Key Ring
+     * @return the first suitable PGP Secret Key found for signing
+     * @throws IOException
+     * @throws PGPException
+     */
+    @SuppressWarnings("unchecked")
+    private static PGPSecretKey readSecretKey(InputStream input) throws IOException, PGPException
+    {
+        PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(input));
+        Iterator<PGPSecretKeyRing> iter = pgpSec.getKeyRings();
+        PGPSecretKey secKey = null;
+         
+        while (iter.hasNext() && secKey == null) {
+            PGPSecretKeyRing keyRing = iter.next();
+            Iterator<PGPSecretKey> keyIter = keyRing.getSecretKeys();
+             
+            while (keyIter.hasNext()) {
+                PGPSecretKey key = keyIter.next();
+                if (key.isSigningKey()) {
+                    secKey = key;
+                    break;
+                }
+            }
+        }
+         
+        if(secKey != null) {
+            return secKey;
+        }
+        else {
+            throw new IllegalArgumentException("Can't find signing key in key ring.");
+        }
     }
 }

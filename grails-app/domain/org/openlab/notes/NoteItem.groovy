@@ -7,7 +7,8 @@ class NoteItem extends DataObject{
 	String title
 	String status
 	String note
-	String finalizedNote
+	String authorSignedData
+	String supervisorSignedData
 	User supervisor
 	
 	String toString(){
@@ -17,9 +18,10 @@ class NoteItem extends DataObject{
     static constraints = {
 		title blank: false
 		note blank: false
-		finalizedNote nullable: true
+		authorSignedData nullable: true
+		supervisorSignedData nullable: true
 		supervisor nullable: true
-		status inList:["open", "final", "signed"]
+		status inList:["draft", "final", "signed"]
     }
 	static mapping = {
 		note type: 'text'

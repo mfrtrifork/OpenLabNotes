@@ -13,6 +13,7 @@ package org.openlab.notes
 import javax.crypto.SecretKeyFactory
 
 
+
 //import cr.co.arquetipos.crypto.*
 
 import crypttools.PGPCryptoBC
@@ -25,20 +26,23 @@ import org.openlab.security.User
 import java.security.NoSuchAlgorithmException
 
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.context.SecurityContextHolder
 
 class NoteItemController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST", finalize: "POST"]
 
+	transient springSecurityService
+	
     def noteAccessService
 
     def index() {
         redirect(action: "list", params: params)
     }
 	def list = {
-//		new PGPCryptoBC()
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User loggedInUser = User.find{username == auth.name}
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
@@ -53,7 +57,7 @@ class NoteItemController {
 		User loggedInUser = User.find{username == auth.name}
 		def hasKeys = UserPGP.countByOwner(loggedInUser)
 		if(hasKeys == 0){
-//			redirect(action: "createKeys", params: params)
+			redirect(action: "createKeys", params: params)
 		}
         [noteItemInstance: new NoteItem(params), bodyOnly: true]
     }
@@ -88,7 +92,7 @@ class NoteItemController {
 		}else if(auth.name == noteItemInstance.supervisor.toString()){
 			supervisor = true
 		}
-        [noteItemInstance: noteItemInstance, bodyOnly: true, creator: creator, supervisor: supervisor]
+		[noteItemInstance: noteItemInstance, bodyOnly: true, creator: creator, supervisor: supervisor]
 
     }
 
@@ -179,51 +183,48 @@ class NoteItemController {
 		[noteItemInstance: noteItemInstance, users:users, bodyOnly: true]
 	}
 	def actualFinalize(){
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		User loggedInUser = User.find{username == auth.name}
-		
-		/* Find supervisor from id */
-		def supervisor = User.find{id == params.supervisor}
-		
-		/* TODO: Check if password is correct */
-		String passphrase = params.password
-		
-	
-		/* Remove supervisor from parameters */
-		params.remove('supervisor')
+		/* Check of noteItem exists */
 		def noteItemInstance = NoteItem.get(params.id)
 		if (!noteItemInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
 			redirect(action: "list")
 			return
 		}
-		[noteItemInstance: noteItemInstance]
+		/* Get user from username */
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		User loggedInUser = User.find{username == auth.name}
+		
+		String passphrase = params.password
+		String username = loggedInUser
+		params.remove('password')
+		String encodedPassword = springSecurityService.encodePassword(passphrase)
+		
+		/* Check password */
+		if(!loggedInUser.password.equals(encodedPassword)){
+			flash.message = "Incorrect password!"
+			params.bodyOnly = true
+			redirect(action: "finalizeNote", params: params)
+			return;
+		}
+		
+		/* Find supervisor from id */
+		def supervisor = User.find{id == params.supervisor}
+		params.remove('supervisor')
+		params.remove('status')
+		
 		noteItemInstance.properties = params
 		/* Add the supervisor to the noteItem */
 		noteItemInstance.supervisor = supervisor
 		
-		/* Get keys for user */
+		/* Get secret key for user */
 		UserPGP userKeys = UserPGP.findByOwner(loggedInUser)
-		String encodedPublic = userKeys.encodedPublic
-		String encodedPrivate = userKeys.encodedPrivate
+		String secretKey = userKeys.secretKey
 		
-		/* TODO: Catch exception if password is incorrect */
-//		PGP pgp = new PGP(encodedPublic, encodedPrivate, passphrase)
-		
-//		PGP both  = new PGP(encodedPublic, encodedPrivate)
-//		PGP privateOnly = new PGP('', encodedPrivate)
-		
-//		PGP publicOnly = new PGP(encodedPublic, '')
-		
-//		String message = "Hush Hush"C
-//		String encrypted = publicOnly.encryptBase64(message)
-		
-		//String decrypted = publicOnly.decryptBase64(encrypted)
-		
-//		println(decrypted)
-		
-		return
-		
+		PGPCryptoBC pgp = new PGPCryptoBC()
+		pgp.setSecretKey(secretKey)
+				
+		noteItemInstance.authorSignedData = pgp.signData(noteItemInstance.note,passphrase) 
+		noteItemInstance.status = 'final'
 		if (!noteItemInstance.save(flush: true)) {
 			render(view: "edit", model: [noteItemInstance: noteItemInstance])
 			return
@@ -237,12 +238,41 @@ class NoteItemController {
 	}
 	
 	def saveKeys(){
+		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User loggedInUser = User.find{username == auth.name}
 		
-		/* TODO: Check if password is correct */
 		String passphrase = params.password
+		String username = loggedInUser
 		params.remove('password')
+		String encodedPassword = springSecurityService.encodePassword(passphrase)
+		
+		if(!loggedInUser.password.equals(encodedPassword)){
+			flash.message = "Incorrect password!"
+            redirect(action: "createKeys", params:[bodyOnly: true])
+			return;
+		}
+		
+		/* Generate keys for user */
+		PGPCryptoBC pgp = new PGPCryptoBC()
+		pgp.generateKeys(username, passphrase)
+		
+		/* Store keys on a new UserPGP instance for the user */
+		def UserPGPInstance = new UserPGP()
+		UserPGPInstance.owner = loggedInUser
+		
+		UserPGPInstance.secretKey = pgp.getSecretKey()
+		UserPGPInstance.publicKey = pgp.getPublicKey()
+		
+		if(!UserPGPInstance.save(flush: true, failOnError:true)) {
+			flash.message = "Something went wrong!"
+			redirect(action: "createKeys", params:[bodyOnly: true])
+			return;
+		}
+		flash.message = 'Public and private keys has been generated for your account'
+		redirect(action: "create", params:[bodyOnly: true])
+		
+		//new PGPCryptoBC()
 //		def pgp = PGP.generateKeyPair()
 //		String encodedPublic = pgp.encodedPublicKey
 //		String encodedPrivate = pgp.getEncodedPrivateKey(passphrase)
