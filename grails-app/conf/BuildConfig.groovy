@@ -36,7 +36,7 @@ grails.project.dependency.resolution = {
               ":rest-client-builder:1.0.3") {
             export = false
         }
-//			  compile ":crypto:2.0"
-		runtime ":resources:1.1.6"
+	compile ":quartz:1.0.1"
+	runtime ":resources:1.1.6"
     }
 }

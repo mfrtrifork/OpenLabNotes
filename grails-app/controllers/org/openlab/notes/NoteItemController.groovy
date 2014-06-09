@@ -51,12 +51,6 @@ class NoteItemController {
 	}
 
     def create() {
-		/* Check if user has keys for encryption */
-		def hasKeys = UserPGP.countByOwner(springSecurityService.currentUser)
-		if(hasKeys == 0){
-			params.from = 'createNote'
-			redirect(action: "createKeys", params: params)
-		}
         [noteItemInstance: new NoteItem(params), bodyOnly: true]
     }
 
@@ -165,6 +159,13 @@ class NoteItemController {
         }
     }
 	def authorSign(Long id) {
+		/* Check if user has keys for encryption */
+		def hasKeys = UserPGP.countByOwner(springSecurityService.currentUser)
+		if(hasKeys == 0){
+			params.from = 'authorSign'
+			params.noteId = id
+			redirect(action: "createKeys", params: params)
+		}
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		def users = User.findAll {
 			username != springSecurityService.currentUser.toString()
@@ -228,7 +229,7 @@ class NoteItemController {
 		noteItemInstance.authorSignedData = pgp.signData(noteItemInstance.note,passphrase) 
 		noteItemInstance.status = 'final'
 		if (!noteItemInstance.save(flush: true)) {
-			render(view: "edit", model: [noteItemInstance: noteItemInstance])
+			redirect(action: "list")
 			return
 		}
 		flash.message = message(code: 'Note was finalized', args: [message(code: 'noteItem.label', default: 'NoteItem'), noteItemInstance.id])
@@ -236,6 +237,14 @@ class NoteItemController {
 	}
 	
 	def supervisorSign(Long id) {
+		/* Check if user has keys for encryption */
+		def hasKeys = UserPGP.countByOwner(springSecurityService.currentUser)
+		if(hasKeys == 0){
+			params.from = 'supervisorSign'
+			params.noteId = id
+			redirect(action: "createKeys", params: params)
+		}
+		
 		def noteItemInstance = NoteItem.get(id)
 		if (!noteItemInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
@@ -245,19 +254,68 @@ class NoteItemController {
 			flash.message = "You do not have access to this particular note!"
 			redirect(action: "list")
 		}
-		
-		
 		[noteItemInstance: noteItemInstance, bodyOnly: true]
+	}
+	def supervisorSignNote() {
+		/* Check of noteItem exists */
+		def noteItemInstance = NoteItem.get(params.id)
+		if (!noteItemInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'noteItem.label', default: 'NoteItem'), id])
+			redirect(action: "list")
+			return
+		}else if(!noteAccessService.grantAccess(noteItemInstance)){
+            flash.message = "You do not have access to this particular note!"
+            redirect(action: "list")
+			return
+        }
+		
+		User loggedInUser = springSecurityService.currentUser
+		
+		String passphrase = params.password
+		String username = loggedInUser
+		params.remove('password')
+		String encodedPassword = springSecurityService.encodePassword(passphrase)
+		
+		/* Check password */
+		if(!loggedInUser.password.equals(encodedPassword)){
+			flash.message = "Incorrect password!"
+			params.bodyOnly = true
+			redirect(action: "authorSign", params: params)
+			return;
+		}
+		
+		params.remove('status')
+		
+		noteItemInstance.properties = params
+		
+		/* Get secret key for user */
+		UserPGP userKeys = UserPGP.findByOwner(loggedInUser)
+		String secretKey = userKeys.secretKey
+		
+		PGPCryptoBC pgp = new PGPCryptoBC()
+		pgp.setSecretKey(secretKey)
+				
+		noteItemInstance.supervisorSignedData = pgp.signData(noteItemInstance.note,passphrase) 
+		noteItemInstance.status = 'signed'
+		if (!noteItemInstance.save(flush: true)) {
+			redirect(action: "list")
+			return
+		}
+		flash.message = message(code: 'Note was signed', args: [message(code: 'noteItem.label', default: 'NoteItem'), noteItemInstance.id])
+		redirect(action: "show", id: noteItemInstance.id, params:[bodyOnly: true])
 	}
 	
 	def createKeys(){
 		def from = params.from
-		[UserPGPInstance: new UserPGP(params), from :from , bodyOnly: true]
+		def noteId = params.noteId
+		[UserPGPInstance: new UserPGP(params), from :from, noteId: noteId, bodyOnly: true]
 	}
 	
 	def saveKeys(){
 		def from = params.from
+		def noteId = params.noteId
 		params.remove('from')
+		params.remove('noteId')
 		User loggedInUser = springSecurityService.currentUser
 		
 		String passphrase = params.password
@@ -285,12 +343,20 @@ class NoteItemController {
 		if(!UserPGPInstance.save(flush: true, failOnError:true)) {
 			flash.message = "Something went wrong!"
 			redirect(action: "createKeys", params:[bodyOnly: true])
-			return;
+			return
 		}
 		flash.message = 'Public and private keys has been generated for your account'
-		println(from)
-		if(from.equals('createNote')){
-			redirect(action: "create", params:[bodyOnly: true])
+		if(from.equals('authorSign')){
+			println('author')
+			redirect(action: "authorSign", params:[bodyOnly: true, id:noteId], id:noteId)
+			return
 		}
+		if(from.equals('supervisorSign')){
+			println('supervisor')
+			redirect(action: "supervisorSign", params:[bodyOnly: true], id:noteId)
+			return
+		}
+		println('none')
+		redirect(action: "list", params:[bodyOnly: true])
 	}
 }

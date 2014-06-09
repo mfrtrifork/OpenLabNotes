@@ -22,17 +22,24 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPOnePassSignature;
+import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
  
 /**
  * 
@@ -146,6 +153,62 @@ public class PGPCryptoBC {
         
         fileToSign.delete();
         return new String(byteOutputStream.toByteArray(), "UTF-8");
+	}
+	
+	public boolean validateData(String data) throws Exception{
+		File fileToVerify = File.createTempFile("temp",".scrap");
+        FileUtils.writeStringToFile(fileToVerify, data);
+        
+        File publicKeyFile = File.createTempFile("temp",".scrap");
+        FileUtils.writeStringToFile(publicKeyFile, new String(this.armoredPublicKey, "UTF-8"));
+        
+        try {
+        	InputStream in = PGPUtil.getDecoderStream(new FileInputStream(fileToVerify));
+            
+            PGPObjectFactory pgpObjFactory = new PGPObjectFactory(in);
+            PGPCompressedData compressedData = (PGPCompressedData)pgpObjFactory.nextObject();
+             
+            //Get the signature from the file
+              
+            pgpObjFactory = new PGPObjectFactory(compressedData.getDataStream());
+            PGPOnePassSignatureList onePassSignatureList = (PGPOnePassSignatureList)pgpObjFactory.nextObject();
+            PGPOnePassSignature onePassSignature = onePassSignatureList.get(0);
+             
+            //Get the literal data from the file
+     
+            PGPLiteralData pgpLiteralData = (PGPLiteralData)pgpObjFactory.nextObject();
+            InputStream literalDataStream = pgpLiteralData.getInputStream();
+             
+            InputStream keyIn = new FileInputStream(publicKeyFile);
+            PGPPublicKeyRingCollection pgpRing = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(keyIn));
+            PGPPublicKey key = pgpRing.getPublicKey(onePassSignature.getKeyID());
+            
+            FileOutputStream literalDataOutputStream = new FileOutputStream(pgpLiteralData.getFileName());
+            onePassSignature.init(new JcaPGPContentVerifierBuilderProvider().setProvider("BC"), key);
+     
+            int ch;
+            while ((ch = literalDataStream.read()) >= 0) {
+                onePassSignature.update((byte)ch);
+                literalDataOutputStream.write(ch);
+            }
+     
+            literalDataOutputStream.close();
+             
+            //Get the signature from the written out file
+     
+            PGPSignatureList p3 = (PGPSignatureList)pgpObjFactory.nextObject();
+            PGPSignature signature = p3.get(0);
+             
+            //Verify the two signatures
+            boolean valid = onePassSignature.verify(signature);
+            return valid;
+        } catch (Exception e) {
+        	return false;
+            //do something clever with the exception
+        } finally {
+            fileToVerify.delete();
+            publicKeyFile.delete();
+        }
 	}
 	
 	public String getSecretKey() throws UnsupportedEncodingException{
