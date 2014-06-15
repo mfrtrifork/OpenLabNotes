@@ -25,6 +25,8 @@ class NoteItem extends DataObject{
     }
 	static mapping = {
 		note type: 'text'
+		authorSignedData type: 'text'
+		supervisorSignedData type: 'text'
 		table 'olfNoteItem'
 	}
 

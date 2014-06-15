@@ -22,7 +22,6 @@
 			</g:hasErrors>
 			<g:form method="post" onsubmit="return false;">
 				<fieldset class="form">
-					<g:hiddenField name="from" value="${from}" />
 					For security reasons we need to generate keys for encryption of notes. Please confirm your password.
 					<table>
 						<tbody>
@@ -38,7 +37,7 @@
 					</table>
 				</fieldset>
 				<fieldset class="buttons">
-					<g:submitToRemote update="body" action="saveKeys" class="save" value="${message(code: 'default.button.saveKeys.label', default: 'Generate keys')}"/>
+					<g:submitToRemote update="body" id="${noteId}" action="saveKeys" class="save" value="${message(code: 'default.button.saveKeys.label', default: 'Generate keys')}"/>
 				</fieldset>
 			</g:form>
 		</div>

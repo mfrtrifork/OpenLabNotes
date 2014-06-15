@@ -4,7 +4,7 @@
 	<head>
 		<meta name="layout" content="${params.bodyOnly?'body':'main'}" />
 		<g:set var="entityName" value="${message(code: 'noteItem.label', default: 'NoteItem')}" />
-		<title><g:message code="default.supervisorSign.label" args="[entityName]" /></title>
+		<title><g:message code="default.signNote.label" args="[entityName]" /></title>
 	</head>
 	<body>
 		<a href="#edit-noteItem" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
@@ -38,11 +38,21 @@
 									<g:passwordField name="password" value="" style="width:99%"/>
 								</td>
 							</tr>
+							<g:if test="${users}">
+								<tr>
+									<td>
+										<label for="supervisor">Supervisor</label>
+									</td>
+									<td>
+										<g:select name="supervisor" from="${users}" value="${{users}}" optionKey="id" optionValue="${{it.userRealName}}" />
+									</td>
+								</tr>
+							</g:if>
 						</tbody>
 					</table>
 				</fieldset>
 				<fieldset class="buttons">
-					<g:submitToRemote update="body" action="supervisorSignNote" class="save" value="${message(code: 'default.button.supervisorSignNote.label', default: 'Sign note')}"/>
+					<g:submitToRemote update="body" action="signNoteData" id="${noteItemInstance?.id}" class="save" value="${message(code: 'default.button.signNoteData.label', default: 'Sign note')}"/>
 				</fieldset>
 			</g:form>
 		</div>

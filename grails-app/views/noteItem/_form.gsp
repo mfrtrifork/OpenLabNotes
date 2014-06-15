@@ -6,6 +6,7 @@
 			plugins: [
 		                "table textcolor code"
 		    ],
+		    width: 800,
 		    selector: "textarea",
 		    toolbar1: "cut copy paste | searchreplace | bullist numlist | outdent indent blockquote | undo redo | link unlink anchor image media code | inserttime preview | table",
 	        toolbar2: "bold italic underline strikethrough |formatselect fontselect fontsizeselect | alignleft aligncenter alignright alignjustify | forecolor backcolor",
@@ -25,7 +26,7 @@
 				</div>
 			</td>
 			<td>
-				<g:textField name="title" value="${noteItemInstance?.title}" style="width:99%"/>
+				<g:textField name="title" value="${noteItemInstance?.title}"/>
 			</td>
 		</tr>
 		<tr>

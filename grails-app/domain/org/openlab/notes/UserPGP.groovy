@@ -10,7 +10,11 @@ class UserPGP {
 	String secretKey
 	String publicKey
 
-	
+	static mapping = {
+		secretKey type: 'text'
+		publicKey type: 'text'
+		table 'olfUserPGP'
+	}
     static constraints = {
 		owner unique: true
     }

@@ -39,13 +39,13 @@ class NoteValidationJob {
 		}
 	}
 	println(dataUntampered)
-	def setting = UserSetting.findByKey("dataIntegrity")
-	if(setting == null){
-		setting = new UserSetting(key: "dataIntegrity", value: dataUntampered)
-		setting.add()
-		//settingsService.setSetting(key: "dataIntegrity", value: dataUntampered)
-	}
-	setting = UserSetting.findByKey("dataIntegrity")
-	println(setting)
+//	def setting = UserSetting.findByKey("dataIntegrity")
+//	if(setting == null){
+//		setting = new UserSetting(key: "dataIntegrity", value: dataUntampered)
+//		setting.add()
+//		settingsService.setSetting(key: "dataIntegrity", value: dataUntampered)
+//	}
+//	setting = UserSetting.findByKey("dataIntegrity")
+//	println(setting)
   }
 }
