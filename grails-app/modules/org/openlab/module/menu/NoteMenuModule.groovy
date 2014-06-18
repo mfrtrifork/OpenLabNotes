@@ -21,7 +21,8 @@ class NoteMenuModule implements MenuModule{
                     submenu(label: 'Notes')
                             {
                                 menuitem(controller: controller, action: 'create', label: 'Create new Note')
-                                menuitem(controller: controller, action: 'list', label: 'List Notes')
+                                menuitem(controller: controller, action: 'list', label: 'List your notes')
+								menuitem(controller: controller, action: 'listSupervisor', label: 'List notes to sign')
                             }
                 }
 

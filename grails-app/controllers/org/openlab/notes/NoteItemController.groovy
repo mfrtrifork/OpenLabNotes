@@ -45,7 +45,14 @@ class NoteItemController {
 	def list = {
 		User loggedInUser = springSecurityService.currentUser
 		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
-		def notesList = NoteItem.findAllByCreatorOrSupervisor(loggedInUser, loggedInUser, [sort: "id", order: "desc"])
+		def notesList = NoteItem.findAllByCreator(loggedInUser, [sort: "id", order: "desc"])
+		//[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
+		[noteItemInstanceList: notesList, noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
+	}
+	def listSupervisor = {
+		User loggedInUser = springSecurityService.currentUser
+		//params.max = Math.min(params.max ? params.int('max') : 10, 100)
+		def notesList = NoteItem.findAllBySupervisor(loggedInUser, [sort: "id", order: "desc"])
 		//[noteItemInstanceList: NoteItem.list(params), noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
 		[noteItemInstanceList: notesList, noteItemInstanceTotal: NoteItem.count(), bodyOnly: true]
 	}
@@ -181,14 +188,19 @@ class NoteItemController {
 			return
 		}
 		def users = null
+		User lastSupervisor = null
 		if(noteItemInstance.creator == currentUser){
 			/* currentUser is the author */
 			users = User.findAll {
 				username != currentUser.toString()
 				/* TODO: enabled = true */
 			}
+			def lastNote = NoteItem.findByCreatorAndSupervisorIsNotNull(currentUser, [sort: "id", order: "desc"])
+			if(lastNote != null){
+				lastSupervisor = lastNote.supervisor
+			}
 		}
-		[noteItemInstance: noteItemInstance, users: users, bodyOnly: true]
+		[noteItemInstance: noteItemInstance, users: users, lastSupervisor: lastSupervisor, bodyOnly: true]
 	}
 	
 	def signNoteData(Long id){

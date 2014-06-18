@@ -9,13 +9,8 @@
 	</head>
 	<body>
 		<a href="#list-noteItem" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
-		<div class="nav" role="navigation">
-			<ul>
-				<li><g:remoteLink params="${[bodyOnly: true]}" update="body" class="create" action="create"><g:message code="New note" args="[entityName]" /></g:remoteLink></li>
-			</ul>
-		</div>
 		<div id="list-noteItem" class="content scaffold-list" role="main">
-			<h1>List notes</h1>
+			<h1>Notes to sign as supervisor</h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>

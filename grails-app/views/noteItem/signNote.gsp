@@ -44,7 +44,12 @@
 										<label for="supervisor">Supervisor</label>
 									</td>
 									<td>
+									<g:if test="${lastSupervisor}">
+										<g:select name="supervisor" from="${users}" value="${lastSupervisor?.id}" optionKey="id" optionValue="${{it.userRealName}}" />
+									</g:if>
+									<g:else>
 										<g:select name="supervisor" from="${users}" value="${{users}}" optionKey="id" optionValue="${{it.userRealName}}" />
+									</g:else>
 									</td>
 								</tr>
 							</g:if>

@@ -1,6 +1,9 @@
 package org.openlab.notes
 
 import org.openlab.main.DataObject
+import org.openlab.genetracker.CellLine
+import org.openlab.genetracker.CellLineData
+import org.openlab.genetracker.Recombinant
 import org.openlab.security.User
 
 class NoteItem extends DataObject{
@@ -10,6 +13,8 @@ class NoteItem extends DataObject{
 	String authorSignedData
 	String supervisorSignedData
 	User supervisor
+	
+	static hasMany = [cellLine: CellLine, cellLineData: CellLineData, recombinant: Recombinant]
 	
 	String toString(){
 		title
