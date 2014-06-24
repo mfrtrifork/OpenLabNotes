@@ -149,10 +149,12 @@ class NoteItemController {
         else if(!noteAccessService.grantAccess(noteItemInstance)){
             flash.message = "You do not have access to this particular note!"
             redirect(action: "list")
+			return
         }
-        else if(noteItemInstance.status != "open"){
+        else if(noteItemInstance.status != "draft"){
             flash.message = "You are not allowed to delete finalized notes"
             redirect(action: "show", id: id)
+			return
         }
 
         try {
@@ -191,10 +193,7 @@ class NoteItemController {
 		User lastSupervisor = null
 		if(noteItemInstance.creator == currentUser){
 			/* currentUser is the author */
-			users = User.findAll {
-				username != currentUser.toString()
-				/* TODO: enabled = true */
-			}
+			users = User.findAllByUsernameNotEqual(currentUser.toString(), [sort:"userRealName"])
 			def lastNote = NoteItem.findByCreatorAndSupervisorIsNotNull(currentUser, [sort: "id", order: "desc"])
 			if(lastNote != null){
 				lastSupervisor = lastNote.supervisor

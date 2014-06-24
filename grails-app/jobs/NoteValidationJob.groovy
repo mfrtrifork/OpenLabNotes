@@ -1,51 +1,53 @@
 import org.openlab.security.User
-import org.openlab.settings.UserSetting
+
+import org.openlab.notes.IntegrityStatus
+
 import org.openlab.notes.NoteItem
 import org.openlab.notes.UserPGP
 import crypttools.PGPCryptoBC
 
+
+
 class NoteValidationJob {
-  static triggers = {
-    simple name: 'mySimpleTrigger', startDelay: 30000, repeatInterval: 5000  
+  def static triggers = {
+	  cron name: 'myIntegrityTrigger', cronExpression: "0 0 4 * * ?"
+//    simple name: 'mySimpleTrigger', startDelay: 30000, repeatInterval: 5000  
   }
   def group = "MyGroup"
-  def settingsService
   def execute(){
+	  
     def notes = NoteItem.findAll()
 	boolean dataUntampered = true
 	for(noteItemInstance in notes){
 		if(noteItemInstance.status == 'final'){
-			println("Validating final  note("+noteItemInstance.id+"): " + noteItemInstance.title)
+//			println("Validating final  note("+noteItemInstance.id+"): " + noteItemInstance.title)
 			PGPCryptoBC pgp = new PGPCryptoBC()
 			UserPGP userKeys = UserPGP.findByOwner(noteItemInstance.creator)
-			pgp.setPublicKey(userKeys.publicKey)
-			if(!pgp.validateData(noteItemInstance.authorSignedData)){
+			if(!pgp.validateData(noteItemInstance.authorSignedData, userKeys.publicKey)){
 				dataUntampered = false
 			}
 		}
 		if(noteItemInstance.status == 'signed'){
-			println("Validating signed note("+noteItemInstance.id+"): " + noteItemInstance.title)
+//			println("Validating signed note("+noteItemInstance.id+"): " + noteItemInstance.title)
 			PGPCryptoBC pgp = new PGPCryptoBC()
 			UserPGP userKeys = UserPGP.findByOwner(noteItemInstance.creator)
-			pgp.setPublicKey(userKeys.publicKey)
-			if(!pgp.validateData(noteItemInstance.authorSignedData)){
+			if(!pgp.validateData(noteItemInstance.authorSignedData, userKeys.publicKey)){
 				dataUntampered = false
 			}
-			userKeys = UserPGP.findByOwner(noteItemInstance.supervisor)
-			pgp.setPublicKey(userKeys.publicKey)
-			if(!pgp.validateData(noteItemInstance.supervisorSignedData)){
+			PGPCryptoBC pgp2 = new PGPCryptoBC()
+			UserPGP userKeys2 = UserPGP.findByOwner(noteItemInstance.supervisor)
+			if(!pgp2.validateData(noteItemInstance.supervisorSignedData, userKeys2.publicKey)){
 				dataUntampered = false
 			}
 		}
 	}
-	println(dataUntampered)
-//	def setting = UserSetting.findByKey("dataIntegrity")
-//	if(setting == null){
-//		setting = new UserSetting(key: "dataIntegrity", value: dataUntampered)
-//		setting.add()
-//		settingsService.setSetting(key: "dataIntegrity", value: dataUntampered)
-//	}
-//	setting = UserSetting.findByKey("dataIntegrity")
-//	println(setting)
+	def integrityStatusInstance = new IntegrityStatus()
+	integrityStatusInstance.dateCreated = new Date()
+	integrityStatusInstance.integrity = dataUntampered
+	println(integrityStatusInstance.dateCreated)
+	println(integrityStatusInstance.integrity)
+	if (!integrityStatusInstance.save(flush: true, failOnError:true)) {
+		println("Failed to save integrity")
+	}
   }
 }

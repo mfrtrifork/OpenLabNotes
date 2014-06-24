@@ -10,11 +10,13 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.KeyPair;
+import java.security.Security;
 import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
@@ -113,6 +115,7 @@ public class PGPCryptoBC {
 	}
 	
 	public String signData(String data, String passphrase) throws Exception{
+		Security.addProvider(new BouncyCastleProvider());
 		InputStream keyInputStream = new ByteArrayInputStream(this.armoredSecretKey);
 		PGPSecretKey pgpSecretKey = readSecretKey(keyInputStream);
 		PGPPrivateKey pgpPrivateKey = pgpSecretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder().setProvider("BC").build(passphrase.toCharArray()));
@@ -155,12 +158,18 @@ public class PGPCryptoBC {
         return new String(byteOutputStream.toByteArray(), "UTF-8");
 	}
 	
-	public boolean validateData(String data) throws Exception{
-		File fileToVerify = File.createTempFile("temp",".scrap");
+	public boolean validateData(String data, String publicKey) throws Exception{
+		Security.addProvider(new BouncyCastleProvider());
+		File fileToVerify = File.createTempFile("temp",".privateScrap");
         FileUtils.writeStringToFile(fileToVerify, data);
         
-        File publicKeyFile = File.createTempFile("temp",".scrap");
-        FileUtils.writeStringToFile(publicKeyFile, new String(this.armoredPublicKey, "UTF-8"));
+        File publicKeyFile = File.createTempFile("temp",".publicScrap");
+        // Creates an exception
+//        System.out.println(this.armoredPublicKey);
+//        String armoredKeyString = getPublicKey();
+//        System.out.println(armoredKeyString);
+        FileUtils.writeStringToFile(publicKeyFile, publicKey);
+        //FileUtils.writeStringToFile(publicKeyFile, new String(this.armoredPublicKey, "UTF-8"));
         
         try {
         	InputStream in = PGPUtil.getDecoderStream(new FileInputStream(fileToVerify));
@@ -203,6 +212,7 @@ public class PGPCryptoBC {
             boolean valid = onePassSignature.verify(signature);
             return valid;
         } catch (Exception e) {
+        	System.out.println("Got an Exception: " + e.getMessage());
         	return false;
             //do something clever with the exception
         } finally {
